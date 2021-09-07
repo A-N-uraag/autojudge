@@ -547,7 +547,7 @@ def new_problem(request, contest_id):
     if not (perm is True):
         return handler404(request)
     context = {'contest': contest}
-    if timezone.now() > contest.start_datetime:
+    if timezone.now() > contest.hard_end_datetime:
         return handler404(request)
     if request.method == 'POST':
         form = NewProblemForm(request.POST, request.FILES)
