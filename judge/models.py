@@ -61,6 +61,12 @@ class Contest(models.Model):
     public = models.BooleanField(default=False)
     """Is the contest public?"""
 
+    enable_leaderboard = models.BooleanField(default=True)
+    """Enable leaderboard"""
+
+    show_leaderboard = models.BooleanField(default=False)
+    """Display leaderboard"""
+
     enable_linter_score = models.BooleanField(default=True)
     """Enable linter scoring"""
 

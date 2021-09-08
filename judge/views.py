@@ -248,7 +248,11 @@ def contest_detail(request, contest_id):
     if perm is None:
         return handler404(request)
     problems = Problem.objects.filter(contest_id=contest_id)
-    status, leaderboard = handler.get_leaderboard(contest_id)
+    if contest.enable_leaderboard:
+        status, leaderboard = handler.get_leaderboard(contest_id)
+    else:
+        status = False
+        leaderboard = "Leaderboard disabled."
     curr_time = timezone.now()
     context = {
         'contest': contest,
@@ -262,9 +266,9 @@ def contest_detail(request, contest_id):
         if request.method == 'POST':
             form = UpdateContestForm(request.POST)
             if form.is_valid():
-                if (curr_time < contest.soft_end_datetime or
-                    (form.cleaned_data['contest_soft_end'] == contest.soft_end_datetime and
-                        curr_time < contest.hard_end_datetime)):
+                if (curr_time < contest.hard_end_datetime
+                    and (curr_time < contest.soft_end_datetime
+                    or (form.cleaned_data['contest_soft_end'] == contest.soft_end_datetime))):
                     try:
                         contest.start_datetime = form.cleaned_data['contest_start']
                         contest.soft_end_datetime = form.cleaned_data['contest_soft_end']
@@ -272,13 +276,20 @@ def contest_detail(request, contest_id):
                         contest.save()
                     except Exception as e:
                         form.add_error(None, str(e))
-                else:
+                elif form.cleaned_data['contest_soft_end']:
                     form.add_error(None, 'Deadline cannot be extended if it has passed')
+                if contest.enable_leaderboard:
+                    try:
+                        contest.show_leaderboard = form.cleaned_data['show_leaderboard']
+                        contest.save()
+                    except Exception as e:
+                        form.add_error(None, str(e))
         else:
             form = UpdateContestForm(initial={
                 'contest_start': contest.start_datetime,
                 'contest_soft_end': contest.soft_end_datetime,
                 'contest_hard_end': contest.hard_end_datetime,
+                'show_leaderboard': contest.show_leaderboard,
             })
         context['form'] = form
     return render(request, 'judge/contest_detail.html', context)
