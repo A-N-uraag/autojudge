@@ -123,7 +123,7 @@
         <div class="row m-2 p-0">
             {% for test_id, res in test_results.items %}
             <div class="col-md-6 m-0 py-3 px-2 border-bottom">
-                <a href="#" data-toggle="modal" data-target="#modal-{{ test_id }}">Test Case {{ forloop.counter }}</a>
+                <a href="#" data-toggle="modal" data-target="#modal-{{ test_id }}">Test Case {{ res.4 }}</a>
                 {% if res.3 %}
                 <span class="badge badge-pill badge-primary">Public</span>
                 {% else %}
@@ -145,7 +145,12 @@
                                 <div class="card shadow border-0">
                                     <div class="card-body px-lg-5 py-lg-5">
                                         <div class="text-center mb-4">
-                                            Test Case {{ forloop.counter }}
+                                            Test Case {{ res.4 }}
+                                            {% if res.3 %}
+                                            <span class="badge badge-pill badge-primary">Public</span>
+                                            {% else %}
+                                            <span class="badge badge-pill badge-default">Private</span>
+                                            {% endif %}
                                         </div>
                                         <div>
                                             <table class="table">
@@ -170,7 +175,7 @@
                                             </table>
                                             <p>
                                                 <b>Message:</b><br>
-                                                <textarea class="form-control" disabled>{{ res.4 }}</textarea>
+                                                <textarea class="form-control" disabled>{{ res.5 }}</textarea>
                                             </p>
                                         </div>
                                     </div>
