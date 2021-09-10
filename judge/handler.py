@@ -891,10 +891,19 @@ def get_submission_status(submission_id: str):
     testcases = models.TestCase.objects.filter(problem=submission.problem)
 
     verdict_dict = {}
+    public_count = 0
+    private_count = 0
+    count = 0
     for testcase in testcases:
         st = models.SubmissionTestCase.objects.get(submission=submission_id, testcase=testcase)
+        if testcase.public:
+            public_count+=1
+            count = public_count
+        else:
+            private_count+=1
+            count = private_count
         verdict_dict[testcase.pk] = (st.get_verdict_display, st.time_taken,
-                                     st.memory_taken, testcase.public, st.message)
+                                     st.memory_taken, testcase.public, count, st.message)
 
     score_tuple = (submission.judge_score, submission.poster_score, submission.linter_score,
                    submission.final_score, submission.timestamp, submission.file_type)
