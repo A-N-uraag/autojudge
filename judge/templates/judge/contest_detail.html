@@ -39,6 +39,9 @@
             {% if type == 'Poster' %}
             {% if curr_time < contest.hard_end_datetime %}<a class="btn btn-primary my-1 btn-sm"
                 href="{% url 'judge:new_problem' contest.pk %}">Add Problem</a>{% endif %}
+            {% if curr_time < contest.hard_end_datetime or contest.enable_leaderboard %}
+            <button type="button" class="btn btn-primary my-1 btn-sm" data-toggle="modal"
+                data-target="#modal-update-dates">Update contest</button>{% endif %}
             <a class="btn btn-primary my-1 btn-sm" href="{% url 'judge:contest_scores_csv' contest.pk %}">Download
                 Scores</a>
             {% endif %}
@@ -46,12 +49,10 @@
             {% if not contest.public %}<a class="btn btn-primary my-1 btn-sm"
                 href="{% url 'judge:get_participants' contest.pk %}">See
                 participants</a>{% endif %}
-            {% if type == 'Poster' and curr_time < contest.hard_end_datetime %}<button type="button"
-                class="btn btn-primary my-1 btn-sm" data-toggle="modal" data-target="#modal-update-dates">Update
-                dates</button>{% endif %}
         </div>
     </div>
-    {% if type == 'Poster' and curr_time < contest.hard_end_datetime %}
+    {% if curr_time < contest.hard_end_datetime or contest.enable_leaderboard %}
+    {% if type == 'Poster' %}
     <div class="modal fade" id="modal-update-dates" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal- modal-dialog-centered modal-sm" role="document">
             <div class="modal-content">
@@ -70,6 +71,8 @@
                                 {% csrf_token %}
                                 {% for field in form %}
                                 <div class="form-group mb-1">
+                                    {% if field.value != 1 and field.value != 0 %}
+                                    {% if curr_time < contest.hard_end_datetime %}
                                     {{ field.label_tag }}
                                     <div class="input-group input-group-alternative">
                                         <div class="input-group-prepend">
@@ -85,6 +88,19 @@
                                         {{ field.errors|striptags }}
                                     </div>
                                     {% endif %}
+                                    {% endif %}
+                                    {% elif contest.enable_leaderboard %}
+                                    {{ field.label_tag }}
+                                    {{ field }}
+                                    {% if field.help_text %}
+                                    <small class="form-text text-muted">{{ field.help_text|safe }}</small>
+                                    {% endif %}
+                                    {% if field.errors %}
+                                    <div class="alert alert-danger mt-2" role="alert">
+                                        {{ field.errors|striptags }}
+                                    </div>
+                                    {% endif %}
+                                    {% endif %}
                                 </div>
                                 {% endfor %}
                                 <div class="text-center">
@@ -97,6 +113,7 @@
             </div>
         </div>
     </div>
+    {% endif %}
     {% endif %}
     <div class="col-md-5 float-right">
         <i class="ni ni-calendar-grid-58"></i> Starts at {{ contest.start_datetime|localtime }}<br>
@@ -125,6 +142,8 @@
         </div>
         {% endfor %}
     </div>
+    {% if contest.enable_leaderboard %}
+    {% if type == 'Poster' or contest.show_leaderboard %}
     <div class="col-12 col-md-5 my-4">
         {% if leaderboard_status %}
         <table class="table table-striped">
@@ -149,6 +168,8 @@
         <p>{{ leaderboard }}</p>
         {% endif %}
     </div>
+    {% endif %}
+    {% endif %}
     {% if type == 'Poster' %}
     <div class="col-12 my-4">
         <form action="{% url 'judge:delete_contest' contest.pk %}" method="POST">
