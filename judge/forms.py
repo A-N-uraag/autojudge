@@ -303,7 +303,7 @@ class NewSubmissionForm(forms.Form):
     file_type = forms.ChoiceField(label='File type', choices=[
         ('.cpp', 'C++'),
         ('.c', 'C'),
-        ('.py', 'Python3.6'),
+        ('.py', 'Python3.8'),
         ('.go', 'Go'),
         ('.hs', 'Haskell'),
     ])
