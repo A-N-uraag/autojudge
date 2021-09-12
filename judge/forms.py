@@ -82,6 +82,10 @@ class NewContestForm(forms.Form):
     is_public = forms.BooleanField(label='Is this contest public?', required=False)
     """Contest is_public property"""
 
+    enable_leaderboard = forms.BooleanField(label='Enable leaderboard', required=False,
+                                             initial=True)
+    """Contest enable_leaderboard property"""
+
     enable_linter_score = forms.BooleanField(label='Enable linter scoring',
                                              required=False)
     """Contest enable_linter_score property"""
@@ -111,23 +115,28 @@ class UpdateContestForm(forms.Form):
     Form to update the timeline of the Contest
     """
 
-    contest_start = forms.DateTimeField(label='Start Date',
+    contest_start = forms.DateTimeField(label='Start Date', required=False,
                                         widget=forms.DateTimeInput(attrs={'class': 'form-control'}),
                                         help_text='Specify when the contest begins.')
     """Contest Start Timestamp"""
 
-    contest_soft_end = forms.DateTimeField(label='Soft End Date',
+    contest_soft_end = forms.DateTimeField(label='Soft End Date', required=False,
                                            widget=forms.DateTimeInput(
                                                attrs={'class': 'form-control'}),
                                            help_text='Specify after when would you like to \
                                                       penalize submissions.')
     """Contest Soft End Timestamp"""
 
-    contest_hard_end = forms.DateTimeField(label='Hard End Date',
+    contest_hard_end = forms.DateTimeField(label='Hard End Date', required=False,
                                            widget=forms.DateTimeInput(
                                                attrs={'class': 'form-control'}),
                                            help_text='Specify when the contest completely ends.')
     """Contest Hard End Timestamp"""
+
+    show_leaderboard = forms.BooleanField(label='Display leaderboard', required=False,
+                                            help_text='Specify whether leaderboard should be \
+                                                        displayed or not.')
+    """Contest enable_leaderboard property"""
 
     def clean(self):
         cleaned_data = super().clean()
@@ -294,7 +303,7 @@ class NewSubmissionForm(forms.Form):
     file_type = forms.ChoiceField(label='File type', choices=[
         ('.cpp', 'C++'),
         ('.c', 'C'),
-        ('.py', 'Python3.6'),
+        ('.py', 'Python3.8'),
         ('.go', 'Go'),
         ('.hs', 'Haskell'),
     ])

@@ -21,14 +21,14 @@ SUB_FILE=$2
 
 . ${PROB_FDR}/${PROB_CODE}/compilation_script.sh
 
-if ! file --mime -b ${SUBPATH} | grep -i -q "ascii" ; then  # checking for ASCII source files
-    return $FAILURE
-fi
-
 # Now perform string-matching to get the extension
 # and the corresponding "executable"
 SUBPATH=${SUB_FDR}/${SUB_FILE}
 EXECPATH=${SUBPATH%.*}
+
+if ! file --mime -b ${SUBPATH} | grep -i -q "ascii" ; then  # checking for ASCII source files
+    return $FAILURE
+fi
 
 case "$SUBPATH" in
     *.c)

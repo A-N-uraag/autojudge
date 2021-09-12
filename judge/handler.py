@@ -26,6 +26,7 @@ def _check_and_remove(*fullpaths):
 
 def process_contest(contest_name: str, contest_start: datetime, contest_soft_end: datetime,
                     contest_hard_end: datetime, penalty: float, is_public: bool,
+                    enable_leaderboard: bool,
                     enable_linter_score: bool,
                     enable_poster_score: bool) -> Tuple[bool, Union[ValidationError, str]]:
     """
@@ -37,6 +38,7 @@ def process_contest(contest_name: str, contest_start: datetime, contest_soft_end
     :param contest_hard_end: A `datetime` object representing the hard deadline of the contest
     :param penalty: A penalty score for late submissions
     :param is_public: Field to indicate if the contest is public (or private)
+    :param enable_leaderboard: Field to indicate if leaderboard is to be maintained
     :param enable_linter_score: Field to indicate if linter scoring is enabled in the contest
     :param enable_poster_score: Field to indicate if poster scoring is enabled in the contest
     :returns: A 2-tuple - 1st element indicating whether the processing has succeeded, and
@@ -53,6 +55,7 @@ def process_contest(contest_name: str, contest_start: datetime, contest_soft_end
                                                     soft_end_datetime=contest_soft_end,
                                                     hard_end_datetime=contest_hard_end,
                                                     penalty=penalty, public=is_public,
+                                                    enable_leaderboard=enable_leaderboard,
                                                     enable_linter_score=enable_linter_score,
                                                     enable_poster_score=enable_poster_score)
     # Catch any weird errors that might pop up during the creation
@@ -502,7 +505,7 @@ def update_poster_score(submission_id: str, new_score: int):
     except Exception as other_err:
         return (False, ValidationError(str(other_err)))
 
-    if old_highscore != ppf.score:
+    if old_highscore != ppf.score and submission.problem.contest.enable_leaderboard:
         # Update the leaderboard only if submission improved the final score
         update_leaderboard(submission.problem.contest.pk,
                            submission.participant.email)
