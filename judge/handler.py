@@ -856,17 +856,26 @@ def get_submissions(problem_id: str,
         else:
             return (True, {person.email: []})
 
+    # Get test cases for this problem
+    testcases = models.TestCase.objects.filter(problem=problem)
+
     # The below code creates a dictionary with keys = person IDs and values
     # as a list of submissions made by the person (given by the key) for the problem
     result = {}
-    curr_person = submission_set[0].participant.email
-    result[curr_person] = [submission_set[0]]
-    for i in range(1, len(submission_set)):
-        if submission_set[i].participant.email == curr_person:
-            result[curr_person].append(submission_set[i])
+    curr_person = ''
+    for i in range(0, len(submission_set)):
+        sub_test_list = [submission_set[i],[],[]]
+        for testcase in testcases:
+            st = models.SubmissionTestCase.objects.get(submission=submission_set[i].id, testcase=testcase)
+            if testcase.public:
+                sub_test_list[1].append(st.get_verdict_display)
+            else:
+                sub_test_list[2].append(st.get_verdict_display)
+        if i!=0 and submission_set[i].participant.email == curr_person:
+            result[curr_person].append(sub_test_list)
         else:
             curr_person = submission_set[i].participant.email
-            result[curr_person] = [submission_set[i]]
+            result[curr_person] = [sub_test_list]
     return (True, result)
 
 
