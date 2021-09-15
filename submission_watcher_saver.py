@@ -66,11 +66,6 @@ def saver(sub_id):
     score_received = 0
     max_score = problem.max_score
 
-    #for i in range(len(testcase_id)):
-        #if verdict[i] == 'P':
-            #os.remove(os.path.join(MONITOR_DIRECTORY, 'output_' + sub_id +'_'+ testcase_id[i] + '.txt'))
-        #elif verdict[i] == 'F' and not models.TestCase.objects.get(pk=testcase_id[i]).public:
-            #os.remove(os.path.join(MONITOR_DIRECTORY, 'output_' + sub_id +'_'+ testcase_id[i] + '.txt'))
 
     for i in range(len(testcase_id)):
         if verdict[i] == 'P':
