@@ -15,7 +15,9 @@ from judge import models, handler  # noqa: E402
 
 CONTENT_DIRECTORY = 'content'
 TMP_DIRECTORY = 'tmp'
+TESTCASE_DIRECTORY = 'testcase'
 MONITOR_DIRECTORY = os.path.join(CONTENT_DIRECTORY, TMP_DIRECTORY)
+OUTPUT_DIRECTORY = os.path.join(CONTENT_DIRECTORY, TESTCASE_DIRECTORY)
 DOCKER_IMAGE_NAME = 'autojudge_docker'
 
 LS: List[str] = []
@@ -63,6 +65,8 @@ def saver(sub_id):
 
     score_received = 0
     max_score = problem.max_score
+
+
     for i in range(len(testcase_id)):
         if verdict[i] == 'P':
             score_received += max_score
@@ -72,9 +76,14 @@ def saver(sub_id):
         st.memory_taken = int(memory[i])
         st.time_taken = timedelta(seconds=float(time[i]))
         if models.TestCase.objects.get(pk=testcase_id[i]).public:
-            st.message = msg[i] if len(msg[i]) < 1000 else msg[i][:1000] + '\\nMessage Truncated'
+            if verdict[i] == 'F' or verdict[i] == 'P' :
+                with open(os.path.join(OUTPUT_DIRECTORY, 'outputfile_' + testcase_id[i] + '.txt'),'r') as f:
+                	st.message = "Expected output:\n"+str(f.read())+"\nOutput:\n"+msg[i]
+            else:
+                st.message = msg[i] if len(msg[i]) < 1000 else msg[i][:1000] + '\\nMessage Truncated'
+        
         st.save()
-
+        
     s.judge_score = score_received
 
     if s.problem.contest.enable_linter_score:

@@ -89,7 +89,7 @@ run_submission() {
   else
     clean_generated_output ${SID} ${TID}  # Delete the generated file to prevent any mismatch
     ${SUB_FDR}/submission_${SID} < ${TEST_FDR}/inputfile_${TID}.txt > ${TMP}/sub_output_${SID}_${TID}.txt 2> ${TMP}/sub_run_${SID}_${TID}.log
-
+    
     case "$?" in
       "0")
           ./${PROB_FDR}/${PROB_CODE}/test_script ${TEST_FDR}/outputfile_${TID}.txt ${TMP}/sub_output_${SID}_${TID}.txt > /dev/null
@@ -103,6 +103,12 @@ run_submission() {
           ;;
     esac
   fi
+  
+  if ! [ -s ${TMP}/sub_run_${SID}_${TID}.log ] ; then #if error stream is empty take the output. Will later be used to show difference of output if testcase has failed
+     cat ${TMP}/sub_output_${SID}_${TID}.txt > ${TMP}/sub_run_${SID}_${TID}.log
+  fi
+
+
   VERDICT="${VERDICT} ${WCTIME} ${MAXVM} sub_run_${SID}_${TID}.log"
   echo ${VERDICT}
 }
