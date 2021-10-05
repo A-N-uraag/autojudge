@@ -28,7 +28,8 @@ def testcase_upload_location(instance, filename, is_input):
 
 def submission_upload_location(instance, filename):
     # We disregard the filename argument
-    file_name = 'submission_{}{}'.format(instance.id, instance.file_type)
+    participant, problem, index = instance.id.split('_')
+    file_name = '{}/{}/{}{}'.format(participant, problem, instance.id, instance.file_type)
     return 'content/submissions/{}'.format(file_name)
 
 

@@ -28,8 +28,8 @@
             <tbody>
                 {% for sub in subs.0 %}
                 <tr>
-                    <td><a href="{% url 'judge:submission_detail' sub.0.pk %}">{{ sub.0.pk }}</a></td>
-                    <td>{{ sub.0.timestamp }}</td>
+                    <td><a {% if forloop.first %} style="color:rgb(8, 201, 50)" {% endif%} href="{% url 'judge:submission_detail' sub.0.pk %}">{{ sub.0.pk }}</a></td>
+                    <td {% if forloop.first %} style="color:rgb(8, 201, 50)" {% endif%} >{{ sub.0.timestamp }}</td>
                     <td>
                         {% for result in sub.1 %}
                         {% if forloop.counter == 1 %}
@@ -64,9 +64,9 @@
                         {% endfor %}
                         
                     </td>
-                    <td>{{ sub.0.final_score }}</td>
+                    <td {% if forloop.first %} style="color:rgb(8, 201, 50)" {% endif%} >{{ sub.0.final_score }}</td>
                     <td>
-                        <a href="{% url 'judge:submission_download' sub.0.pk %}" class="btn btn-icon btn-default">
+                        <a {% if forloop.first %} style="background-color:rgb(8, 201, 50)" {% endif%} href="{% url 'judge:submission_download' sub.0.pk %}" class="btn btn-icon btn-default">
                             <span class="btn-inner--icon"><i class="fas fa-download"></i></span>
                         </a>
                     </td>
