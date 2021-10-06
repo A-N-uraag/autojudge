@@ -1,4 +1,6 @@
 import os
+import zipfile
+from io import BytesIO
 
 from django.urls import reverse
 from django.core.files import File
@@ -36,6 +38,10 @@ def _return_file_as_response(path_name):
     response['Content-Disposition'] = 'attachment; filename="{}"'.format(f_name)
     return response
 
+def _return_zip_as_response(zip_contents, zip_filename):
+    response = HttpResponse(zip_contents, content_type = "application/x-zip-compressed")
+    response['Content-Disposition'] = 'attachment; filename={}'.format(zip_filename)
+    return response
 
 def handler404(request, *args):
     """
@@ -686,6 +692,43 @@ def submission_download(request, submission_id: str):
         return _return_file_as_response(submission.submission_file.path)
     else:
         return handler404(request)
+
+def all_submissions_download(request, problem_id: str):
+    """
+    Function to provide the facility to download all latest submissions for a given problem.
+
+    :param request: the request object used
+    :type request: HttpRequest
+    :param problem_id: the problem ID
+    :type problem_id: str
+    """
+    user = _get_user(request)
+    all_participants = Submission.objects.filter(problem=problem_id).values_list('participant').distinct()
+    zip_subdir = problem_id
+    zip_filename = "{}.zip".format(zip_subdir)
+
+    s = BytesIO()
+    zf = zipfile.ZipFile(s, "w")
+
+    for participant in all_participants:
+        submission = Submission.objects.filter(problem=problem_id, participant=participant).order_by('-timestamp')[0]
+        print(submission)
+        filepath = submission.submission_file.name
+        print(filepath)
+        perm = handler.get_personproblem_permission(
+            None if user is None else user.email, problem_id)
+        if user is None:
+            return handler404(request)
+        if perm or user.email == submission.participant:
+            filedir, filename = os.path.split(filepath)
+            zip_path = os.path.join(zip_subdir, filename)
+            zf.write(filepath, zip_path)
+        else:
+            return handler404(request)
+    zf.close()
+    return _return_zip_as_response(s.getvalue(),zip_filename)
+
+
 
 
 def submission_detail(request, submission_id: str):
