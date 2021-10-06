@@ -712,9 +712,7 @@ def all_submissions_download(request, problem_id: str):
 
     for participant in all_participants:
         submission = Submission.objects.filter(problem=problem_id, participant=participant).order_by('-timestamp')[0]
-        print(submission)
         filepath = submission.submission_file.name
-        print(filepath)
         perm = handler.get_personproblem_permission(
             None if user is None else user.email, problem_id)
         if user is None:
