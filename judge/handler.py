@@ -421,8 +421,9 @@ def process_submission(problem_id: str, participant_id: str, file_type: str,
     participant = participant[0]
 
     try:
-        sub_id = "{}_{}_{}".format(participant_id.split('@')[0], problem_id, len(models.Submission.objects.filter(problem=problem_id,participant=participant_id)))
-        sub = problem.submission_set.create(id=sub_id, participant=participant, file_type=file_type,
+        submission_index = str(len(models.Submission.objects.filter(problem=problem_id,participant=participant_id))).zfill(3)
+        submission_id = "{}_{}_{}".format(participant_id.split('@')[0], problem_id, submission_index)
+        sub = problem.submission_set.create(id=submission_id, participant=participant, file_type=file_type,
                                             submission_file=submission_file, timestamp=timestamp)
         sub.save()
     # Catch any weird errors that might pop up during the creation
@@ -836,7 +837,7 @@ def get_submissions(problem_id: str,
 
     if person_id is None:
         submission_set = models.Submission.objects.filter(
-            problem=problem).order_by('participant')
+            problem=problem).order_by('participant','-id')
     else:
         person = models.Person.objects.filter(email=person_id.lower())
         if not person.exists():
@@ -845,7 +846,7 @@ def get_submissions(problem_id: str,
                                     .format(person_id.lower())))
         person = person[0]
         submission_set = models.Submission.objects.filter(
-            problem=problem, participant=person)
+            problem=problem, participant=person).order_by('-id')
 
     # If submission_set is empty, then return an empty dictionary if no person_id is
     # specified, otherwise return a dict with a key as the person_id and value as an
