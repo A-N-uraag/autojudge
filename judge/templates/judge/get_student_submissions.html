@@ -1,0 +1,44 @@
+{% extends 'judge/base.html' %}
+
+{% block title %}Get Submissions | Contest {{ contest_id }}{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'judge:contest_detail' contest_id %}">Contest {{ contest_id }}</a></li>
+<li class="breadcrumb-item active" aria-current="page">Get Submissions</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2>Get Submissions of a List of Participants</h2>
+    </div>
+    <div class="col-12">
+        <form method="POST">
+            {% if form.non_field_errors %}
+            {% for nfe in form.non_field_errors %}
+            <div class="alert alert-danger mt-2" role="alert">
+                    {{ nfe }}
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="form-group">
+                {{ field.label_tag }} {{ field }}
+                {% if field.help_text %}
+                <small class="form-text text-muted">{{ field.help_text|safe }}</small>
+                {% endif %}
+                {% if field.errors %}
+                {% for fe in field.errors %}
+                <div class="alert alert-danger mt-2" role="alert">
+                    {{ fe|striptags }}
+                </div>
+                {% endfor %}
+                {% endif %}
+            </div>
+            {% endfor %}
+            <button type="submit" class="btn btn-primary">Get Submissions</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

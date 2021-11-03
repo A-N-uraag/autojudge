@@ -211,6 +211,56 @@ def add_person(request, contest_id, role):
     context['form'] = form
     return render(request, 'judge/contest_add_person.html', context)
 
+def get_submissions_from_list(request, contest_id):
+    """
+    Function to render the page for adding a person - participant or poster to
+    a contest.
+
+    :param request: the request object used
+    :type request: HttpRequest
+    :param contest_id: the contest ID
+    :type contest_id: int
+    :param role: ``True`` for Poster, ``False`` for Participant
+    :type role: bool
+    """
+    user = _get_user(request)
+    perm = handler.get_personcontest_permission(
+        None if user is None else user.email, contest_id)
+    if not (perm is True):
+        return handler404(request)
+    context = {'contest_id': contest_id}
+    if request.method == 'POST':
+        form = AddPersonToContestForm(request.POST)
+        if form.is_valid():
+            emails = form.cleaned_data['emails']
+            problems = Problem.objects.filter(contest_id=contest_id)
+            zip_subdir = "contest"+str(contest_id)
+            zip_filename = "{}.zip".format(zip_subdir)
+
+            s = BytesIO()
+            zf = zipfile.ZipFile(s, "w")
+            for problem in problems:
+                if "ALL" in emails:
+                    emails = Submission.objects.filter(problem=problem.pk).values_list('participant').distinct()
+                for participant in emails:
+                    submission = Submission.objects.filter(problem=problem.pk, participant=participant).order_by('-timestamp')[0]
+                    filepath = submission.submission_file.name
+                    perm = handler.get_personproblem_permission(
+                        None if user is None else user.email, problem.pk)
+                    if user is None:
+                        return handler404(request)
+                    if perm or user.email == submission.participant:
+                        filedir, filename = os.path.split(filepath)
+                        zip_path = os.path.join(zip_subdir, filename)
+                        zf.write(filepath, zip_path)
+                    else:
+                        return handler404(request)
+            zf.close()
+            return _return_zip_as_response(s.getvalue(),zip_filename)
+    else:
+        form = AddPersonToContestForm()
+    context['form'] = form
+    return render(request, 'judge/get_student_submissions.html', context)
 
 def add_poster(request, contest_id):
     """
@@ -693,7 +743,7 @@ def submission_download(request, submission_id: str):
     else:
         return handler404(request)
 
-def all_submissions_download(request, problem_id: str):
+def all_submissions_download(request, problem_id: str, all_participants=None):
     """
     Function to provide the facility to download all latest submissions for a given problem.
 
@@ -703,7 +753,8 @@ def all_submissions_download(request, problem_id: str):
     :type problem_id: str
     """
     user = _get_user(request)
-    all_participants = Submission.objects.filter(problem=problem_id).values_list('participant').distinct()
+    if(all_participants==None):
+        all_participants = Submission.objects.filter(problem=problem_id).values_list('participant').distinct()
     zip_subdir = problem_id
     zip_filename = "{}.zip".format(zip_subdir)
 

@@ -25,6 +25,8 @@ urlpatterns = [
          views.new_problem, name='new_problem'),
     path('contest/<int:contest_id>/poster/new/',
          views.add_poster, name='contest_add_poster'),
+    path('contest/<int:contest_id>/get_submissions',
+         views.get_submissions_from_list, name='get_submissions_from_list'),
     path('contest/<int:contest_id>/participant/new/',
          views.add_participant, name='contest_add_participant'),
     path('contest/<int:contest_id>/posters/',

@@ -42,7 +42,8 @@ class MultiEmailField(forms.Field):
             try:
                 validate_email(email)
             except forms.ValidationError:
-                raise forms.ValidationError("'{}' is not a valid email address.".format(email))
+                if(email!="ALL"):
+                    raise forms.ValidationError("'{}' is not a valid email address.".format(email))
         return value
 
 

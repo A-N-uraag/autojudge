@@ -44,6 +44,7 @@
                 data-target="#modal-update-dates">Update contest</button>{% endif %}
             <a class="btn btn-primary my-1 btn-sm" href="{% url 'judge:contest_scores_csv' contest.pk %}">Download
                 Scores</a>
+            <a class="btn btn-primary my-1 btn-sm" href="{% url 'judge:get_submissions_from_list' contest.pk %}">Download Submissions</a>
             {% endif %}
             <a class="btn btn-primary my-1 btn-sm" href="{% url 'judge:get_posters' contest.pk %}">See posters</a>
             {% if not contest.public %}<a class="btn btn-primary my-1 btn-sm"
