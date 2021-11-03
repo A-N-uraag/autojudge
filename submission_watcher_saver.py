@@ -75,12 +75,11 @@ def saver(sub_id):
         st.verdict = verdict[i]
         st.memory_taken = int(memory[i])
         st.time_taken = timedelta(seconds=float(time[i]))
-        if models.TestCase.objects.get(pk=testcase_id[i]).public:
-            if verdict[i] == 'F' or verdict[i] == 'P' :
-                with open(os.path.join(OUTPUT_DIRECTORY, 'outputfile_' + testcase_id[i] + '.txt'),'r') as f:
-                	st.message = "Expected output:\n"+str(f.read())+"\nOutput:\n"+msg[i]
-            else:
-                st.message = msg[i] if len(msg[i]) < 1000 else msg[i][:1000] + '\\nMessage Truncated'
+        if models.TestCase.objects.get(pk=testcase_id[i]).public and (verdict[i] == 'F' or verdict[i] == 'P'):
+            with open(os.path.join(OUTPUT_DIRECTORY, 'outputfile_' + testcase_id[i] + '.txt'),'r') as f:
+                st.message = "Expected output:\n"+str(f.read())+"\nOutput:\n"+msg[i]
+        else:
+            st.message = msg[i] if len(msg[i]) < 1000 else msg[i][:1000] + '\\nMessage Truncated'
         
         st.save()
         
