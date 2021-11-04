@@ -195,7 +195,7 @@
         </div>
         {% endfor %}
     </div>
-    {% if type == 'Poster' %}
+    {% if type == 'Poster' or problem.contest.show_private_tests %}
     <div class="col-12 my-4">
         <h4>Private test cases</h4>
         {% for test in private_tests %}
@@ -294,7 +294,7 @@
             {% else %}
             <div class="card-body">
             <H2>Submissions Over!</H2>
-            </div>>
+            </div>
             {% endif %}
         </div>
     </div>

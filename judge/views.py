@@ -290,12 +290,19 @@ def contest_detail(request, contest_id):
                         contest.save()
                     except Exception as e:
                         form.add_error(None, str(e))
+                if curr_time > contest.hard_end_datetime:
+                    try:
+                        contest.show_private_tests = form.cleaned_data['show_private_tests']
+                        contest.save()
+                    except Exception as e:
+                        form.add_error(None, str(e))
         else:
             form = UpdateContestForm(initial={
                 'contest_start': contest.start_datetime,
                 'contest_soft_end': contest.soft_end_datetime,
                 'contest_hard_end': contest.hard_end_datetime,
                 'show_leaderboard': contest.show_leaderboard,
+                'show_private_tests': contest.show_private_tests,
             })
         context['form'] = form
     return render(request, 'judge/contest_detail.html', context)

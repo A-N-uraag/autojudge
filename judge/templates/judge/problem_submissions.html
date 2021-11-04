@@ -40,7 +40,7 @@
                     <td {% if forloop.first %} style="color:rgb(8, 201, 50)" {% endif%} >{{ sub.0.timestamp }}</td>
                     <td>
                         {% for result in sub.1 %}
-                        {% if forloop.counter == 1 %}
+                        {% if forloop.first %}
                         <span class="badge badge-pill badge-primary">Public</span>
                         {% endif %}
                         {% if result == 'Passed' %}
@@ -54,7 +54,7 @@
                         {% endif %}
                         {% endfor %}
                         {% for result in sub.2 %}
-                        {% if forloop.counter == 1 %}
+                        {% if forloop.first %}
                         {% if sub.1|length != 0 %}
                         <br/>
                         {% endif %}

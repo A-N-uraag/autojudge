@@ -39,9 +39,8 @@
             {% if type == 'Poster' %}
             {% if curr_time < contest.hard_end_datetime %}<a class="btn btn-primary my-1 btn-sm"
                 href="{% url 'judge:new_problem' contest.pk %}">Add Problem</a>{% endif %}
-            {% if curr_time < contest.hard_end_datetime or contest.enable_leaderboard %}
             <button type="button" class="btn btn-primary my-1 btn-sm" data-toggle="modal"
-                data-target="#modal-update-dates">Update contest</button>{% endif %}
+                data-target="#modal-update-dates">Update contest</button>
             <a class="btn btn-primary my-1 btn-sm" href="{% url 'judge:contest_scores_csv' contest.pk %}">Download
                 Scores</a>
             {% endif %}
@@ -51,7 +50,6 @@
                 participants</a>{% endif %}
         </div>
     </div>
-    {% if curr_time < contest.hard_end_datetime or contest.enable_leaderboard %}
     {% if type == 'Poster' %}
     <div class="modal fade" id="modal-update-dates" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal- modal-dialog-centered modal-sm" role="document">
@@ -71,7 +69,7 @@
                                 {% csrf_token %}
                                 {% for field in form %}
                                 <div class="form-group mb-1">
-                                    {% if field.value != 1 and field.value != 0 %}
+                                    {% if forloop.counter < 4 %}
                                     {% if curr_time < contest.hard_end_datetime %}
                                     {{ field.label_tag }}
                                     <div class="input-group input-group-alternative">
@@ -89,7 +87,7 @@
                                     </div>
                                     {% endif %}
                                     {% endif %}
-                                    {% elif contest.enable_leaderboard %}
+                                    {% elif forloop.counter == 4 and contest.enable_leaderboard or forloop.counter == 5 and curr_time > contest.hard_end_datetime %}
                                     {{ field.label_tag }}
                                     {{ field }}
                                     {% if field.help_text %}
@@ -113,7 +111,6 @@
             </div>
         </div>
     </div>
-    {% endif %}
     {% endif %}
     <div class="col-md-5 float-right">
         <i class="ni ni-calendar-grid-58"></i> Starts at {{ contest.start_datetime|localtime }}<br>
