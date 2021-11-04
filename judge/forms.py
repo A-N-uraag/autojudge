@@ -79,6 +79,13 @@ class NewContestForm(forms.Form):
                                  help_text='Enter a penalty factor between 0 and 1.')
     """Contest Penalty factor"""
 
+    submission_limit = forms.IntegerField(label='Submission Limit', min_value=1,
+                                 max_value=1000,
+                                 widget=forms.NumberInput(attrs={'class': 'form-control'}),
+                                 help_text='Enter the maximum number of submissions allowed \
+                                            for each participant (between 1 and 1000).')
+    """Contest Submission Limit"""
+
     is_public = forms.BooleanField(label='Is this contest public?', required=False)
     """Contest is_public property"""
 
