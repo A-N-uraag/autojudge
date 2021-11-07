@@ -135,8 +135,13 @@ class UpdateContestForm(forms.Form):
 
     show_leaderboard = forms.BooleanField(label='Display leaderboard', required=False,
                                             help_text='Specify whether leaderboard should be \
-                                                        displayed or not.')
-    """Contest enable_leaderboard property"""
+                                                        displayed.')
+    """Contest show_leaderboard property"""
+
+    show_private_tests = forms.BooleanField(label='Display private test cases', required=False,
+                                            help_text='Specify whether private test cases should be \
+                                                        displayed.')
+    """Contest show_private_tests property"""
 
     def clean(self):
         cleaned_data = super().clean()

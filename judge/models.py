@@ -73,6 +73,9 @@ class Contest(models.Model):
     enable_poster_score = models.BooleanField(default=True)
     """Enable poster scoring"""
 
+    show_private_tests = models.BooleanField(default=False)
+    """Display private test cases"""
+
     def __str__(self):
         return self.name
 
