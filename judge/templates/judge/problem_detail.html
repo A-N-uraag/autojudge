@@ -247,6 +247,7 @@
                 <h3>Submit Solution</h3>
             </div>
             {% if curr_time < problem.contest.hard_end_datetime %}
+            {% if user_submission_num <= problem.contest.submission_limit %}
             <div class="card-body">
                 <form method="POST" enctype="multipart/form-data">
                     {% if form.non_field_errors %}
@@ -291,6 +292,11 @@
                     </div>
                 </form>
             </div>
+            {% else %}
+            <div class="card-body">
+                <H2>Submission Limit Reached!</H2>
+            </div>
+            {% endif %}
             {% else %}
             <div class="card-body">
             <H2>Submissions Over!</H2>
