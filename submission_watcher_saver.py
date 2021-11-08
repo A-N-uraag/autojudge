@@ -78,6 +78,8 @@ def saver(sub_id):
         if models.TestCase.objects.get(pk=testcase_id[i]).public and (verdict[i] == 'F' or verdict[i] == 'P'):
             with open(os.path.join(OUTPUT_DIRECTORY, 'outputfile_' + testcase_id[i] + '.txt'),'r') as f:
                 st.message = "Expected output:\n"+str(f.read())+"\nOutput:\n"+msg[i]
+        elif not models.TestCase.objects.get(pk=testcase_id[i]).public and verdict[i] == 'RE':
+            st.message = msg[i].splitlines()[-1]
         else:
             st.message = msg[i] if len(msg[i]) < 1000 else msg[i][:1000] + '\\nMessage Truncated'
         
