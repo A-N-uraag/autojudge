@@ -13,6 +13,7 @@
 
 {% block scripts %}
 <script src="/static/assets/vendor/quill/quill.js"></script>
+<script src="/static/assets/vendor/quill/quilljs-markdown.js"></script>
 <script>
     let quillModules = {
         toolbar: [
@@ -36,6 +37,10 @@
         modules: quillModules,
         theme: 'snow',
     })
+
+    new QuillMarkdown(statementQuill)
+    new QuillMarkdown(inputFormatQuill)
+    new QuillMarkdown(outputFormatQuill)
 
     $(document).ready(function(){
         statementQuill.setContents(JSON.parse($('#id_statement').val()))
