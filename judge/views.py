@@ -290,12 +290,19 @@ def contest_detail(request, contest_id):
                         contest.save()
                     except Exception as e:
                         form.add_error(None, str(e))
+                if curr_time > contest.hard_end_datetime:
+                    try:
+                        contest.show_private_tests = form.cleaned_data['show_private_tests']
+                        contest.save()
+                    except Exception as e:
+                        form.add_error(None, str(e))
         else:
             form = UpdateContestForm(initial={
                 'contest_start': contest.start_datetime,
                 'contest_soft_end': contest.soft_end_datetime,
                 'contest_hard_end': contest.hard_end_datetime,
                 'show_leaderboard': contest.show_leaderboard,
+                'show_private_tests': contest.show_private_tests,
             })
         context['form'] = form
     return render(request, 'judge/contest_detail.html', context)
@@ -423,19 +430,23 @@ def problem_detail(request, problem_id):
     }
     if perm is False and user is None:
         pass
-    elif perm is False and user.is_authenticated and timezone.now() < problem.contest.hard_end_datetime:
-        if request.method == 'POST':
-            form = NewSubmissionForm(request.POST, request.FILES)
-            if form.is_valid():
-                status, maybe_error = handler.process_submission(
-                    problem_id, user.email, **form.cleaned_data, timestamp=timezone.now())
-                if status:
-                    return redirect(reverse('judge:problem_submissions', args=(problem_id,)))
-                if not status:
-                    form.add_error(None, maybe_error)
-        else:
-            form = NewSubmissionForm()
-        context['form'] = form
+    elif perm is False and user.is_authenticated:
+        user_submission_num = len(Submission.objects.filter(problem=problem_id,participant=user.email))+1
+        if (user_submission_num <= problem.contest.submission_limit and
+            timezone.now() < problem.contest.hard_end_datetime):
+            if request.method == 'POST':
+                form = NewSubmissionForm(request.POST, request.FILES)
+                if form.is_valid():
+                    status, maybe_error = handler.process_submission(
+                        problem_id, user.email, **form.cleaned_data, timestamp=timezone.now())
+                    if status:
+                        return redirect(reverse('judge:problem_submissions', args=(problem_id,)))
+                    if not status:
+                        form.add_error(None, maybe_error)
+            else:
+                form = NewSubmissionForm()
+            context['form'] = form
+        context['user_submission_num'] = user_submission_num
     if perm is True:
         if timezone.now() < problem.contest.start_datetime:
             if request.method == 'POST':
