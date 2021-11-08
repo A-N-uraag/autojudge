@@ -190,6 +190,11 @@ def process_problem(contest_id: int,
         # This will happen when both compilation_script and test_script were None
         os.makedirs(os.path.join('content', 'problems', new_problem.code))
 
+    #checking incase memory limit was set to 0 accidentally
+    if new_problem.memory_limit==0:
+        new_problem.memory_limit=1 #Defaulting it to 1 MB
+
+    
     if no_comp_script:
         # Copy the default comp_script if the user did not upload custom
         copyfile(os.path.join('judge', 'default', 'compilation_script.sh'),

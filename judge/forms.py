@@ -235,7 +235,7 @@ class NewProblemForm(forms.Form):
                                       widget=forms.NumberInput(attrs={'class': 'form-control'}),
                                       initial=0, min_value=0,
                                       help_text='Specify a memory limit in MB for the execution \
-                                                 of the program.')
+                                                 of the program.If not specified(set to 0) memory limit will default to 1 MB')
     """Problem Memory limit"""
 
     file_exts = forms.CharField(label='Permitted File extensions for submissions',
