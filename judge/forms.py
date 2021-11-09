@@ -80,6 +80,13 @@ class NewContestForm(forms.Form):
                                  help_text='Enter a penalty factor between 0 and 1.')
     """Contest Penalty factor"""
 
+    submission_limit = forms.IntegerField(label='Submission Limit', min_value=1,
+                                 max_value=1000,
+                                 widget=forms.NumberInput(attrs={'class': 'form-control'}),
+                                 help_text='Enter the maximum number of submissions allowed \
+                                            for each participant (between 1 and 1000).')
+    """Contest Submission Limit"""
+
     is_public = forms.BooleanField(label='Is this contest public?', required=False)
     """Contest is_public property"""
 
@@ -136,8 +143,13 @@ class UpdateContestForm(forms.Form):
 
     show_leaderboard = forms.BooleanField(label='Display leaderboard', required=False,
                                             help_text='Specify whether leaderboard should be \
-                                                        displayed or not.')
-    """Contest enable_leaderboard property"""
+                                                        displayed.')
+    """Contest show_leaderboard property"""
+
+    show_private_tests = forms.BooleanField(label='Display private test cases', required=False,
+                                            help_text='Specify whether private test cases should be \
+                                                        displayed.')
+    """Contest show_private_tests property"""
 
     def clean(self):
         cleaned_data = super().clean()
@@ -224,7 +236,7 @@ class NewProblemForm(forms.Form):
                                       widget=forms.NumberInput(attrs={'class': 'form-control'}),
                                       initial=0, min_value=0,
                                       help_text='Specify a memory limit in MB for the execution \
-                                                 of the program.')
+                                                 of the program.If not specified(set to 0) memory limit will default to 1 MB')
     """Problem Memory limit"""
 
     file_exts = forms.CharField(label='Permitted File extensions for submissions',
