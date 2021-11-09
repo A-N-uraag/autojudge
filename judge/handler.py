@@ -135,6 +135,8 @@ def process_problem(contest_id: int,
     :type statement: int
     :param file_exts: Accepted file format for submissions
     :type statement: str
+    :param clang_checks: Placeholder clang checks
+    :type statement: str
     :param starting_code: Starting code for the problem
     :type statement: Optional[InMemoryUploadedFile]
     :param max_score: Maximum judge score per test case for the problem

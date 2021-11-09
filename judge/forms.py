@@ -247,6 +247,12 @@ class NewProblemForm(forms.Form):
                                            for submissions.')
     """Problem File Extensions"""
 
+    clang_checks = forms.CharField(label='Clang Checks',
+                                   widget=forms.TextInput(attrs={'class': 'form-control'}),
+                                   required=False,
+                                   help_text='Give a comma separated list of checks to run.')
+    """Placeholder input field for specifying checkers to enable"""
+
     starting_code = forms.FileField(label='Starting code',
                                     widget=forms.FileInput(attrs={'class': 'form-control-file'}),
                                     allow_empty_file=False, required=False,
