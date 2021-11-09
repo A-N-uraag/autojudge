@@ -96,7 +96,7 @@ run_submission() {
           VERDICT=$(error_code_to_string $? ${TID})
           ;;
       *)
-          echo "Exit code: $?" >> ${TMP}/sub_run_${SID}_${TID}.log
+          echo "\nExit code: $?" >> ${TMP}/sub_run_${SID}_${TID}.log
           VERDICT=$(error_code_to_string $RE ${TID})
           ;;
     esac

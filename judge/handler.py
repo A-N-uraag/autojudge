@@ -916,7 +916,8 @@ def get_submission_status(submission_id: str):
             private_count+=1
             count = private_count
         verdict_dict[testcase.pk] = (st.get_verdict_display, st.time_taken,
-                                     st.memory_taken, testcase.public, count, st.message)
+                                     st.memory_taken, testcase.public, count,
+                                     st.message, st.msgfull)
 
     score_tuple = (submission.judge_score, submission.poster_score, submission.linter_score,
                    submission.final_score, submission.timestamp, submission.file_type)
