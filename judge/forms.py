@@ -178,6 +178,14 @@ class AddPersonToContestForm(forms.Form):
         help_text='Enter emails separated using commas')
     """Email ID of the person"""
 
+class DownloadSubmissionsFromList(forms.Form):
+    """
+    Form to add a Person to a Contest.
+    """
+    emails = forms.CharField(label='Participant Emails', strip=True,
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        help_text='Enter the comma separated list of participant emails or you can use regular expressions')
+    """Email ID of the person"""
 
 class DeletePersonFromContestForm(forms.Form):
     """

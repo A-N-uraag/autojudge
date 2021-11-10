@@ -10,10 +10,11 @@ from django.contrib.auth.models import User
 from django.shortcuts import render, redirect, get_object_or_404
 
 from . import handler
-from .models import Contest, Problem, TestCase, Submission
+from .models import Contest, Problem, TestCase, Submission, Person
 from .forms import NewContestForm, AddPersonToContestForm, DeletePersonFromContestForm
 from .forms import NewProblemForm, EditProblemForm, NewSubmissionForm, AddTestCaseForm
-from .forms import NewCommentForm, UpdateContestForm, AddPosterScoreForm
+from .forms import NewCommentForm, UpdateContestForm, AddPosterScoreForm, DownloadSubmissionsFromList
+import re
 
 
 def _get_user(request) -> User:
@@ -230,9 +231,9 @@ def get_submissions_from_list(request, contest_id):
         return handler404(request)
     context = {'contest_id': contest_id}
     if request.method == 'POST':
-        form = AddPersonToContestForm(request.POST)
+        form = DownloadSubmissionsFromList(request.POST)
         if form.is_valid():
-            emails = form.cleaned_data['emails']
+            emails = form.cleaned_data['emails'].split(',')
             problems = Problem.objects.filter(contest_id=contest_id)
             zip_subdir = "contest"+str(contest_id)
             zip_filename = "{}.zip".format(zip_subdir)
@@ -240,25 +241,25 @@ def get_submissions_from_list(request, contest_id):
             s = BytesIO()
             zf = zipfile.ZipFile(s, "w")
             for problem in problems:
-                if "ALL" in emails:
-                    emails = Submission.objects.filter(problem=problem.pk).values_list('participant').distinct()
-                for participant in emails:
-                    submission = Submission.objects.filter(problem=problem.pk, participant=participant).order_by('-timestamp')[0]
-                    filepath = submission.submission_file.name
-                    perm = handler.get_personproblem_permission(
-                        None if user is None else user.email, problem.pk)
-                    if user is None:
-                        return handler404(request)
-                    if perm or user.email == submission.participant:
-                        filedir, filename = os.path.split(filepath)
-                        zip_path = os.path.join(zip_subdir, filename)
-                        zf.write(filepath, zip_path)
-                    else:
-                        return handler404(request)
+                for entry in emails:
+                    participants = Submission.objects.filter(problem=problem.pk, participant__email__iregex=entry).values_list('participant').distinct()
+                    for participant in participants:
+                        submission = Submission.objects.filter(problem=problem.pk, participant=participant).order_by('-timestamp')[0]
+                        filepath = submission.submission_file.name
+                        perm = handler.get_personproblem_permission(
+                            None if user is None else user.email, problem.pk)
+                        if user is None:
+                            return handler404(request)
+                        if perm or user.email == submission.participant:
+                            filedir, filename = os.path.split(filepath)
+                            zip_path = os.path.join(zip_subdir, filename)
+                            zf.write(filepath, zip_path)
+                        else:
+                            return handler404(request)
             zf.close()
             return _return_zip_as_response(s.getvalue(),zip_filename)
     else:
-        form = AddPersonToContestForm()
+        form = DownloadSubmissionsFromList()
     context['form'] = form
     return render(request, 'judge/get_student_submissions.html', context)
 
