@@ -40,6 +40,7 @@
 {% block scripts %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script>
 <script src="/static/assets/vendor/quill/quill.js"></script>
+<script src="/static/assets/vendor/quill/quilljs-markdown.js"></script>
 <script>
     let quillModules = {
         toolbar: false
@@ -59,6 +60,10 @@
         modules: quillModules,
         theme: 'bubble',
     })
+
+    new QuillMarkdown(statementQuill)
+    new QuillMarkdown(inputFormatQuill)
+    new QuillMarkdown(outputFormatQuill)
 
     {% if problem.statement != None %}
     statementQuill.setContents(JSON.parse('{{ problem.statement | escapejs }}'))
@@ -195,7 +200,7 @@
         </div>
         {% endfor %}
     </div>
-    {% if type == 'Poster' %}
+    {% if type == 'Poster' or problem.contest.show_private_tests %}
     <div class="col-12 my-4">
         <h4>Private test cases</h4>
         {% for test in private_tests %}
@@ -247,6 +252,7 @@
                 <h3>Submit Solution</h3>
             </div>
             {% if curr_time < problem.contest.hard_end_datetime %}
+            {% if user_submission_num <= problem.contest.submission_limit %}
             <div class="card-body">
                 <form method="POST" enctype="multipart/form-data">
                     {% if form.non_field_errors %}
@@ -293,8 +299,13 @@
             </div>
             {% else %}
             <div class="card-body">
+                <H2>Submission Limit Reached!</H2>
+            </div>
+            {% endif %}
+            {% else %}
+            <div class="card-body">
             <H2>Submissions Over!</H2>
-            </div>>
+            </div>
             {% endif %}
         </div>
     </div>

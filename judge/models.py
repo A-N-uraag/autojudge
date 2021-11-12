@@ -58,6 +58,9 @@ class Contest(models.Model):
     penalty = models.FloatField(default=0.0)
     """Penalty for late-submission"""
 
+    submission_limit = models.PositiveSmallIntegerField(default=1000)
+    """Maximum number of submissions allowed for each participant"""
+
     public = models.BooleanField(default=False)
     """Is the contest public?"""
 
@@ -72,6 +75,9 @@ class Contest(models.Model):
 
     enable_poster_score = models.BooleanField(default=True)
     """Enable poster scoring"""
+
+    show_private_tests = models.BooleanField(default=False)
+    """Display private test cases"""
 
     def __str__(self):
         return self.name

@@ -25,7 +25,8 @@ def _check_and_remove(*fullpaths):
 
 
 def process_contest(contest_name: str, contest_start: datetime, contest_soft_end: datetime,
-                    contest_hard_end: datetime, penalty: float, is_public: bool,
+                    contest_hard_end: datetime, penalty: float, submission_limit: int,
+                    is_public: bool,
                     enable_leaderboard: bool,
                     enable_linter_score: bool,
                     enable_poster_score: bool) -> Tuple[bool, Union[ValidationError, str]]:
@@ -37,6 +38,8 @@ def process_contest(contest_name: str, contest_start: datetime, contest_soft_end
     :param contest_soft_end: A `datetime` object representing the soft deadline of the contest
     :param contest_hard_end: A `datetime` object representing the hard deadline of the contest
     :param penalty: A penalty score for late submissions
+    :param submission_limit: Integer representing maximum number of submissions allowed
+                             for each participant
     :param is_public: Field to indicate if the contest is public (or private)
     :param enable_leaderboard: Field to indicate if leaderboard is to be maintained
     :param enable_linter_score: Field to indicate if linter scoring is enabled in the contest
@@ -54,7 +57,9 @@ def process_contest(contest_name: str, contest_start: datetime, contest_soft_end
                                                     start_datetime=contest_start,
                                                     soft_end_datetime=contest_soft_end,
                                                     hard_end_datetime=contest_hard_end,
-                                                    penalty=penalty, public=is_public,
+                                                    penalty=penalty,
+                                                    submission_limit=submission_limit,
+                                                    public=is_public,
                                                     enable_leaderboard=enable_leaderboard,
                                                     enable_linter_score=enable_linter_score,
                                                     enable_poster_score=enable_poster_score)
@@ -185,6 +190,11 @@ def process_problem(contest_id: int,
         # This will happen when both compilation_script and test_script were None
         os.makedirs(os.path.join('content', 'problems', new_problem.code))
 
+    #checking incase memory limit was set to 0 accidentally
+    if new_problem.memory_limit==0:
+        new_problem.memory_limit=1 #Defaulting it to 1 MB
+
+    
     if no_comp_script:
         # Copy the default comp_script if the user did not upload custom
         copyfile(os.path.join('judge', 'default', 'compilation_script.sh'),
@@ -309,9 +319,8 @@ def process_person(email: str, rank: int = 0) -> STATUS_AND_OPT_ERROR_T:
         return (False, ValidationError('Email passed is None.'))
     try:
         (p, status) = models.Person.objects.get_or_create(email=email.lower())
-        if status:
-            p.rank = 0 if rank is None else rank
-            p.save()
+        p.rank = 0 if rank is None else rank
+        p.save()
     # Catch any weird errors that might pop up during the creation or modification
     except Exception as other_err:
         print_exc()
@@ -319,6 +328,20 @@ def process_person(email: str, rank: int = 0) -> STATUS_AND_OPT_ERROR_T:
     else:
         return (True, None)
 
+def get_person_rank(email: str) -> Tuple[bool, Union[ValidationError, int]]:
+    """
+    Function to get rank of a person
+
+    :param email: Email of the person
+    """
+    if email is None:
+        return (False, ValidationError('Email passed is None.'))
+    person = models.Person.objects.filter(email=email.lower())
+    if not person.exists():
+        return (False,
+                ValidationError('Person with email = {} not found'
+                                .format(email.lower())))
+    return (True, person[0].rank)
 
 def process_testcase(problem_id: str, test_type: str,
                      input_file: InMemoryUploadedFile,
