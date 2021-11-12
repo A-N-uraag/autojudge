@@ -95,11 +95,9 @@ run_submission() {
           ./${PROB_FDR}/${PROB_CODE}/test_script ${TEST_FDR}/outputfile_${TID}.txt ${TMP}/sub_output_${SID}_${TID}.txt > /dev/null
           VERDICT=$(error_code_to_string $? ${TID})
           ;;
-      "1")
-          VERDICT=$(error_code_to_string $RE ${TID})
-          ;;
       *)
-          VERDICT=$(error_code_to_string $NA ${TID})
+          echo "\nExit code: $?" >> ${TMP}/sub_run_${SID}_${TID}.log
+          VERDICT=$(error_code_to_string $RE ${TID})
           ;;
     esac
   fi
