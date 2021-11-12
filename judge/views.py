@@ -73,7 +73,7 @@ def index(request):
     context = {}
     user = _get_user(request)
     if user is not None:
-        with open('content/admins.txt', 'r') as f:
+        with open('autojudge/admins.txt', 'r') as f:
             user_rank = 2 if user.email in f.read() else 0
         status, maybe_error = handler.process_person(request.user.email, user_rank)
         if not status:
