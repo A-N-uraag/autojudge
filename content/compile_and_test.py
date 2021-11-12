@@ -15,6 +15,11 @@ parser.add_argument('--submission_config', type=str,
                             ...""")
 args = parser.parse_args()
 
+try:
+    subprocess.check_output(['./judgeClangTool/clangjudge', '--help'], stderr=subprocess.STDOUT)
+except subprocess.CalledProcessError as e:
+    print(str(e.output.decode('utf-8')))
+
 with open(args.submission_config) as f:
     sub_info = [x[:-1] for x in f.readlines()]
 

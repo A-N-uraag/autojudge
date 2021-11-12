@@ -16,8 +16,10 @@ from judge import models, handler  # noqa: E402
 CONTENT_DIRECTORY = 'content'
 TMP_DIRECTORY = 'tmp'
 TESTCASE_DIRECTORY = 'testcase'
+CLANG_JUDGE_DIRECTORY = 'judgeClangTool'
 MONITOR_DIRECTORY = os.path.join(CONTENT_DIRECTORY, TMP_DIRECTORY)
 OUTPUT_DIRECTORY = os.path.join(CONTENT_DIRECTORY, TESTCASE_DIRECTORY)
+CLANG_TOOL_DIRECTORY = os.path.join(CONTENT_DIRECTORY, CLANG_JUDGE_DIRECTORY)
 DOCKER_IMAGE_NAME = 'autojudge_docker'
 
 LS: List[str] = []
@@ -145,6 +147,17 @@ os.chdir(cur_path)
 
 print("Docker image: {} built successfully!".format(DOCKER_IMAGE_NAME))
 
+# Move to ./contest/judgeClangtool
+os.chdir(os.path.join(cur_path, CLANG_TOOL_DIRECTORY))
+call(['./build.sh'])
+
+if os.path.isfile('clangjudge'):
+    print("Clang Judge tool built successfully!")
+else:
+    print("Clang Judge tool build failed!")
+
+# Move back to old directory
+os.chdir(cur_path)
 
 if not os.path.exists(MONITOR_DIRECTORY):
     os.makedirs(MONITOR_DIRECTORY)

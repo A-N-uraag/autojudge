@@ -13,7 +13,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     apt-utils \
     build-essential \
     make \
-    clang \
+    clang-10 \
+    libclang-10-dev \
+    llvm-10-dev \
     curl \
     wget \
     file \
