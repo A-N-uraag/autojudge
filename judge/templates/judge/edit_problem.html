@@ -14,6 +14,7 @@
 
 {% block scripts %}
 <script src="/static/assets/vendor/quill/quill.js"></script>
+<script src="/static/assets/vendor/quill/quilljs-markdown.js"></script>
 <script>
     let quillModules = {
         toolbar: [
@@ -37,6 +38,10 @@
         modules: quillModules,
         theme: 'snow',
     })
+
+    new QuillMarkdown(statementQuill)
+    new QuillMarkdown(inputFormatQuill)
+    new QuillMarkdown(outputFormatQuill)
 
     {% if problem.statement != None %}
     statementQuill.setContents(JSON.parse('{{ problem.statement | escapejs }}'))
