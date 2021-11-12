@@ -319,9 +319,8 @@ def process_person(email: str, rank: int = 0) -> STATUS_AND_OPT_ERROR_T:
         return (False, ValidationError('Email passed is None.'))
     try:
         (p, status) = models.Person.objects.get_or_create(email=email.lower())
-        if status:
-            p.rank = 0 if rank is None else rank
-            p.save()
+        p.rank = 0 if rank is None else rank
+        p.save()
     # Catch any weird errors that might pop up during the creation or modification
     except Exception as other_err:
         print_exc()
@@ -329,6 +328,20 @@ def process_person(email: str, rank: int = 0) -> STATUS_AND_OPT_ERROR_T:
     else:
         return (True, None)
 
+def get_person_rank(email: str) -> Tuple[bool, Union[ValidationError, int]]:
+    """
+    Function to get rank of a person
+
+    :param email: Email of the person
+    """
+    if email is None:
+        return (False, ValidationError('Email passed is None.'))
+    person = models.Person.objects.filter(email=email.lower())
+    if not person.exists():
+        return (False,
+                ValidationError('Person with email = {} not found'
+                                .format(email.lower())))
+    return (True, person[0].rank)
 
 def process_testcase(problem_id: str, test_type: str,
                      input_file: InMemoryUploadedFile,
