@@ -225,17 +225,17 @@ class NewProblemForm(forms.Form):
                                                the problem. If this is unknown, leave it as 0.')
     """Problem Difficulty Field"""
 
-    time_limit = forms.DurationField(label='Time Limit (in seconds)',
+    time_limit = forms.DurationField(label='Time Limit (in milliseconds)',
                                      widget=forms.NumberInput(attrs={'class': 'form-control'}),
-                                     initial=0, help_text='Specify a time limit in seconds \
+                                     initial=0, help_text='Specify a time limit in milliseconds \
                                                            for the execution of the program.')
     """Problem Time limit"""
 
-    memory_limit = forms.IntegerField(label='Memory Limit (in MB)',
+    memory_limit = forms.IntegerField(label='Memory Limit (in KB)',
                                       widget=forms.NumberInput(attrs={'class': 'form-control'}),
                                       initial=0, min_value=0,
                                       help_text='Specify a memory limit in MB for the execution \
-                                                 of the program.If not specified(set to 0) memory limit will default to 1 MB')
+                                                 of the program.If not specified(set to 0) memory limit will default to 1 KB')
     """Problem Memory limit"""
 
     file_exts = forms.CharField(label='Permitted File extensions for submissions',

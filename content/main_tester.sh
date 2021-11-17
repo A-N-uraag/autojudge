@@ -59,13 +59,15 @@ run_submission() {
   TID=$2
   TLIMIT=$3
   MLIMIT=$4
-
+  
+  LIMITFLAG=0
+  
   # First two lines specify the flags required
   # -w /dev/null pipes output of the tool to /dev/null, --vsize-limit gives the virtual size limit
   # --cores 0 limits to only one core, --wall-clock-limit handles the time limit
   # --var provides a file with specific flags which are used for checking
   # The last line runs the process
-  timer_tool -w /dev/null --vsize-limit $MLIMIT --cores 0 --wall-clock-limit $TLIMIT \
+  timer_tool -w /dev/null --vsize-limit $MLIMIT --cores 0 \
              --var ${TMP}/submission_status_${SID}_${TID}.txt \
              ${SUB_FDR}/submission_${SID} < ${TEST_FDR}/inputfile_${TID}.txt > ${TMP}/sub_output_${SID}_${TID}.txt 2> /dev/null
 
@@ -80,13 +82,24 @@ run_submission() {
   #       This is then checked normally using a diff
   #       The status is appended to the verdict_string along with the memory and time consumed
   VERDICT=""
-  if [ "$TIMEOUT" = true ] ; then
-    VERDICT=$(error_code_to_string $TLE ${TID})
-    echo "Time limit exceeded" > ${TMP}/sub_run_${SID}_${TID}.log
-  elif [ "$MEMOUT" = true ] ; then
+  if [ "$MEMOUT" = true ] ; then
     VERDICT=$(error_code_to_string $OOM ${TID})
     echo "Memory limit exceeded" > ${TMP}/sub_run_${SID}_${TID}.log
-  else
+    LIMITFLAG=1
+  
+  elif [ "$MEMOUT" = false ] ; then
+	  
+    timeout -s 15 $TLIMIT ${SUB_FDR}/submission_${SID} < ${TEST_FDR}/inputfile_${TID}.txt > ${TMP}/sub_output_${SID}_${TID}.txt 2> /dev/null
+    
+    if [ "$?" = 124 ] ; then
+	    VERDICT=$(error_code_to_string $TLE ${TID})
+	    echo "Time limit exceeded" > ${TMP}/sub_run_${SID}_${TID}.log
+    	    LIMITFLAG=1
+    fi
+
+  fi
+  
+  if [ "$LIMITFLAG" = 0 ] ; then
     clean_generated_output ${SID} ${TID}  # Delete the generated file to prevent any mismatch
     ${SUB_FDR}/submission_${SID} < ${TEST_FDR}/inputfile_${TID}.txt > ${TMP}/sub_output_${SID}_${TID}.txt 2> ${TMP}/sub_run_${SID}_${TID}.log
     
