@@ -61,7 +61,24 @@ def saver(sub_id):
 
     # Delete the file after reading
     os.remove(os.path.join(MONITOR_DIRECTORY, 'sub_run_' + sub_id + '.txt'))
+    
+    clang_tool_msg=[]
 
+    
+    #Checking if any tool output exists or not 
+    if os.path.isfile(os.path.join(MONITOR_DIRECTORY,  'sub_clangjudge_'+sub_id+'.log')):
+        #If so copy output to variable
+        with open(os.path.join(MONITOR_DIRECTORY, 'sub_clangjudge_'+sub_id+'.log'),'r') as f:
+            clang_msg.append(str(f.read()))
+        
+        #Remove file after copying output
+        os.remove(os.path.join(MONITOR_DIRECTORY,'sub_clangjudge_'+sub_id+'.log'))
+
+        #Priting to see if output is correct or not
+        print(clang_tool_msg)
+
+
+    
     problem = models.Problem.objects.get(pk=problem)
     s = models.Submission.objects.get(pk=submission)
 
