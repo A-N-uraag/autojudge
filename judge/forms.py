@@ -251,7 +251,7 @@ class NewProblemForm(forms.Form):
                                    widget=forms.TextInput(attrs={'class': 'form-control'}),
                                    required=False,
                                    help_text='Give a comma separated list of checks to run.')
-    """Placeholder input field for specifying checkers to enable"""
+    """Problem Clang Tool Flags"""
 
     starting_code = forms.FileField(label='Starting code',
                                     widget=forms.FileInput(attrs={'class': 'form-control-file'}),

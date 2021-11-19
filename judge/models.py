@@ -121,7 +121,7 @@ class Problem(models.Model):
     """Accepted file extensions for submissions to problem"""
 
     clang_checks = models.CharField(max_length=200, default='ALL')
-    """Placeholder for clang checks"""
+    """Flags for clang checks"""
 
     starting_code = models.FileField(upload_to=starting_code_name, null=True)
     """Problem starting code"""

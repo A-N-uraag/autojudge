@@ -460,6 +460,7 @@ def process_submission(problem_id: str, participant_id: str, file_type: str,
         f.write('{}\n'.format(problem.pk))
         f.write('{}\n'.format(sub.pk))
         f.write('{}\n'.format(file_type))
+        f.write('{}\n'.format(problem.clang_checks))
         f.write('{}\n'.format(int(problem.time_limit.total_seconds())))
         f.write('{}\n'.format(problem.memory_limit))
         for testcase in testcases:

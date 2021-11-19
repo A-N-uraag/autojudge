@@ -7,6 +7,7 @@ parser.add_argument('--submission_config', type=str,
                             PROBLEM_CODE
                             SUBMISSION_ID
                             SUBMISSION_FORMAT
+                            CLANG_TOOL_FLAGS
                             TIME_LIMIT
                             MEMORY_LIMIT
                             TESTCASE_1_ID
@@ -15,11 +16,6 @@ parser.add_argument('--submission_config', type=str,
                             ...""")
 args = parser.parse_args()
 
-try:
-    subprocess.check_output(['./judgeClangTool/clangjudge', '--help'], stderr=subprocess.STDOUT)
-except subprocess.CalledProcessError as e:
-    print(str(e.output.decode('utf-8')))
-
 with open(args.submission_config) as f:
     sub_info = [x[:-1] for x in f.readlines()]
 
@@ -27,6 +23,20 @@ with open(args.submission_config) as f:
 subprocess.call(['rm', args.submission_config])
 with open(args.submission_config, "w") as stat_file:
     stat_file.write("{}\n{}\n".format(sub_info[0], sub_info[1]))
+
+flags=''
+for flag in sub_info[3].split(','):
+    flags.append(' --' + flag.strip())
+
+try:
+    subprocess.check_output(['./judgeClangTool/clangjudge', flags,
+                             'submissions/submission_{}{}'.format(sub_info[1], sub_info[2])],
+                             stderr=subprocess.STDOUT)
+except subprocess.CalledProcessError as e:
+    error_msg = str(e.output.decode('utf-8')))
+    clangtool_log_file = 'sub_clangjudge_{}.log'.format(sub_info[1])
+    with open('tmp/' + clangtool_log_file, "w") as log_file:
+        log_file.write(error_msg)
 
 # First compile
 try:
