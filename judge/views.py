@@ -73,13 +73,16 @@ def index(request):
     context = {}
     user = _get_user(request)
     if user is not None:
-        status, maybe_error = handler.process_person(request.user.email)
+        with open('autojudge/admins.txt', 'r') as f:
+            user_rank = 2 if user.email in f.read() else 0
+        status, maybe_error = handler.process_person(request.user.email, user_rank)
         if not status:
             return handler404(request)
     contests = Contest.objects.all()
     permissions = [handler.get_personcontest_permission(
         None if user is None else user.email, contest.pk) for contest in contests]
     context['contests'] = zip(contests, permissions)
+    context['user_rank'] = 0 if user is None else user_rank
     return render(request, 'judge/index.html', context)
 
 
@@ -92,6 +95,9 @@ def new_contest(request):
     """
     user = _get_user(request)
     if user is None:
+        return handler404(request)
+    status, rank_or_error = handler.get_person_rank(user.email)
+    if not status or rank_or_error != 2:
         return handler404(request)
     if request.method == 'POST':
         form = NewContestForm(request.POST)

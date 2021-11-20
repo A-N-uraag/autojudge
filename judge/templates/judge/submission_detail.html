@@ -174,11 +174,18 @@
                                                     </tr>
                                                 </tbody>
                                             </table>
-                                            {% if res.3 %}
+                                            {% if res.0 != "Running" %}
+                                            {% if type == 'Poster' %}
+                                            <p>
+                                                <b>Message:</b><br>
+                                                <textarea class="form-control" disabled style="height:500px;font-weight:bold;">{{ res.6 }}</textarea>
+                                            </p>
+                                            {% elif res.0 != "Passed" and res.0 != "Failed" or res.3 %}
                                             <p>
                                                 <b>Message:</b><br>
                                                 <textarea class="form-control" disabled style="height:500px;font-weight:bold;">{{ res.5 }}</textarea>
                                             </p>
+                                            {% endif %}
                                             {% endif %}
                                         </div>
                                     </div>

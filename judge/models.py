@@ -288,6 +288,9 @@ class SubmissionTestCase(models.Model):
     message = models.TextField(default='')
     """Message placeholder, used for erroneous submissions"""
 
+    msgfull = models.TextField(default='')
+    """Message placeholder, used for displaying full error or output"""
+
     class Meta:
         unique_together = (('submission', 'testcase'),)
 
