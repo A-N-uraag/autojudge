@@ -193,6 +193,9 @@ class Submission(models.Model):
     timestamp = models.DateTimeField()
     """Timestamp of submission"""
 
+    clang_tool_msg = models.TextField(default='')
+    """Message placeholder, used for displaying clang tool output"""
+
     judge_score = models.PositiveSmallIntegerField(default=0)
     """Judge score"""
 

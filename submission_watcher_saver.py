@@ -69,7 +69,7 @@ def saver(sub_id):
     if os.path.isfile(os.path.join(MONITOR_DIRECTORY,  'sub_clangjudge_'+sub_id+'.log')):
         #If so copy output to variable
         with open(os.path.join(MONITOR_DIRECTORY, 'sub_clangjudge_'+sub_id+'.log'),'r') as f:
-            clang_msg.append(str(f.read()))
+            clang_tool_msg.append(str(f.read()))
         
         #Remove file after copying output
         os.remove(os.path.join(MONITOR_DIRECTORY,'sub_clangjudge_'+sub_id+'.log'))
@@ -81,30 +81,35 @@ def saver(sub_id):
     
     problem = models.Problem.objects.get(pk=problem)
     s = models.Submission.objects.get(pk=submission)
+    if clang_tool_msg:
+        s.clang_tool_msg = clang_tool_msg
 
     score_received = 0
     max_score = problem.max_score
 
 
     for i in range(len(testcase_id)):
+        if clang_tool_msg:
+            verdict[i] = 'F'
         if verdict[i] == 'P':
             score_received += max_score
         st = models.SubmissionTestCase.objects.get(submission=submission,
-                                                   testcase=testcase_id[i])
+                                                testcase=testcase_id[i])
         st.verdict = verdict[i]
         st.memory_taken = int(memory[i])
         st.time_taken = timedelta(seconds=float(time[i]))
-        if verdict[i] == 'F' or verdict[i] == 'P':
-            with open(os.path.join(OUTPUT_DIRECTORY, 'outputfile_' + testcase_id[i] + '.txt'),'r') as f:
-                st.msgfull = "Expected output:\n"+str(f.read())+"\nOutput:\n"+msg[i]
-                if models.TestCase.objects.get(pk=testcase_id[i]).public:
-                    st.message = st.msgfull
-        else:
-            st.msgfull = msg[i] if len(msg[i]) < 1000 else msg[i][:1000] + '\\nMessage Truncated'
-            if not models.TestCase.objects.get(pk=testcase_id[i]).public and verdict[i] == 'RE':
-                st.message = msg[i].splitlines()[-1]
+        if not clang_tool_msg:
+            if verdict[i] == 'F' or verdict[i] == 'P':
+                with open(os.path.join(OUTPUT_DIRECTORY, 'outputfile_' + testcase_id[i] + '.txt'),'r') as f:
+                    st.msgfull = "Expected output:\n"+str(f.read())+"\nOutput:\n"+msg[i]
+                    if models.TestCase.objects.get(pk=testcase_id[i]).public:
+                        st.message = st.msgfull
             else:
-                st.message = st.msgfull
+                st.msgfull = msg[i] if len(msg[i]) < 1000 else msg[i][:1000] + '\\nMessage Truncated'
+                if not models.TestCase.objects.get(pk=testcase_id[i]).public and verdict[i] == 'RE':
+                    st.message = msg[i].splitlines()[-1]
+                else:
+                    st.message = st.msgfull
         
         st.save()
         

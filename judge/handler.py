@@ -946,7 +946,8 @@ def get_submission_status(submission_id: str):
                                      st.message, st.msgfull)
 
     score_tuple = (submission.judge_score, submission.poster_score, submission.linter_score,
-                   submission.final_score, submission.timestamp, submission.file_type)
+                   submission.final_score, submission.timestamp, submission.file_type,
+                   submission.clang_tool_msg)
     return (True, (verdict_dict, score_tuple))
 
 
