@@ -311,14 +311,13 @@ class NewSubmissionForm(forms.Form):
     """
     Form to create a new Submission.
     """
-    # TODO For now choices are hard coded
-    file_type = forms.ChoiceField(label='File type', choices=[
-        ('.cpp', 'C++'),
-        ('.c', 'C'),
-        ('.py', 'Python3.8'),
-        ('.go', 'Go'),
-        ('.hs', 'Haskell'),
-    ])
+    
+    def __init__(self, *args, **kwargs):
+        choices = kwargs.pop('choices', None)
+        super(NewSubmissionForm, self).__init__(*args, **kwargs)
+        self.fields['file_type'] = forms.ChoiceField(label='File type', choices=choices)
+
+    file_type = forms.ChoiceField()
     """Choices of file type"""
 
     submission_file = forms.FileField(label='Choose file', required=True, allow_empty_file=False,

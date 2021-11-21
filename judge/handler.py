@@ -305,6 +305,34 @@ def delete_problem(problem_id: str) -> STATUS_AND_OPT_ERROR_T:
     else:
         return (True, None)
 
+def get_problem_file_exts(problem_id: str) -> Tuple[bool, Union[ValidationError, List]]:
+    """
+    Function to get permitted file exts for a problem
+    :param problem_id: the problem ID
+    """
+    problem = models.Problem.objects.filter(code=problem_id)
+    if not problem.exists():
+        return (False, ValidationError('Problem with code = {} not found'
+                                       .format(problem_id)))
+    problem = problem[0]
+        
+    # File ext : lang 
+    choices_dict = {
+        '.cpp': 'C++',
+        '.c': 'C',
+        '.py': 'Python3.8',
+        '.go': 'Go',
+        '.hs': 'Haskell',
+    }
+
+    choices = []
+    
+    for ext in problem.file_exts.split(','):
+        if ext in choices_dict:
+            choices.append((ext, choices_dict[ext]))
+
+    return (True, choices)
+
 
 def process_person(email: str, rank: int = 0) -> STATUS_AND_OPT_ERROR_T:
     """
