@@ -31,7 +31,7 @@ if sub_info[3]:
     try:
         subprocess.check_output(['./judgeClangTool/clangjudge', sub_info[3],
                                 'submissions/submission_{}{}'.format(sub_info[1], sub_info[2])])
-    except subprocess.CalledProcessError as e: 
+    except subprocess.CalledProcessError as e:
         error_msg = str(e.output.decode('utf-8'))
         clangtool_log_file = 'sub_clangjudge_{}.log'.format(sub_info[1])
         with open('tmp/' + clangtool_log_file, "w") as log_file:
