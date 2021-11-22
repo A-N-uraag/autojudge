@@ -164,6 +164,16 @@ def process_problem(contest_id: int,
     if kwargs.get('output_format') == NO_INPUT_QUILL:
         kwargs['output_format'] = 'No output format specified.'
 
+    # Append flags to a single string
+    clang_checks_list = kwargs.get('clang_checks')
+    kwargs['clang_checks'] = ''
+    if clang_checks_list:
+        for index, flag in enumerate(clang_checks_list):
+            kwargs['clang_checks'] += '--' + flag
+            if index + 1 != len(clang_checks_list):
+                kwargs['clang_checks'] += ' '
+
+
     # if either one of compilation_script or test_script is None,
     # we create a Problem with the default compilation script and/or test_script
     # and then we copy a compilation script and/or test_script to the right location

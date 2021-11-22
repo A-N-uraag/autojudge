@@ -247,10 +247,19 @@ class NewProblemForm(forms.Form):
                                            for submissions.')
     """Problem File Extensions"""
 
-    clang_checks = forms.CharField(label='Clang Checks',
-                                   widget=forms.TextInput(attrs={'class': 'form-control'}),
+    clang_checks_choices = [
+        ('all', 'All checks'),
+        ('string-all-check', 'All string checks'),
+        ('strcmp-check', 'strcmp check'),
+        ('sys-all-check', 'All system call checks'),
+    ]
+    
+    clang_checks = forms.MultipleChoiceField(label='Clang Checks',
+                                   widget = forms.CheckboxSelectMultiple,
+                                   choices = clang_checks_choices,
                                    required=False,
-                                   help_text='Give a comma separated list of checks to run.')
+                                   initial = clang_checks_choices[0],
+                                   help_text='Enable clang checks to run.')
     """Problem Clang Tool Flags"""
 
     starting_code = forms.FileField(label='Starting code',

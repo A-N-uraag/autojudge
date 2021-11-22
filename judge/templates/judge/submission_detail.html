@@ -123,10 +123,10 @@
         <div class="row m-2 p-0">
             <div class="col-md-6 m-0 py-3 px-2 border-bottom">
                 <a href="#" data-toggle="modal" data-target="#modal-clang">Clang Checks</a>
-                {% if clangtool_failed %}
-                <span class="badge badge-pill badge-danger">Failed</span>
-                {% else %}
+                {% if clangtool_passed %}
                 <span class="badge badge-pill badge-success">Passed/Running</span>
+                {% else %}
+                <span class="badge badge-pill badge-danger">Failed</span>
                 {% endif %}
             </div>
             <div class="modal fade" id="modal-clang" tabindex="-1" role="dialog" aria-hidden="true">
@@ -144,16 +144,16 @@
                                                 <tr>
                                                     <th>Status</th>
                                                     <td>
-                                                    {% if clangtool_failed %}
-                                                    <span class="badge badge-pill badge-danger">Failed</span>
-                                                    {% else %}
+                                                    {% if clangtool_passed %}
                                                     <span class="badge badge-pill badge-success">Passed/Running</span>
+                                                    {% else %}
+                                                    <span class="badge badge-pill badge-danger">Failed</span>
                                                     {% endif %}
                                                     </td>
                                                 </tr>
                                             </tbody>
                                         </table>
-                                        {% if clangtool_failed %}
+                                        {% if not clangtool_passed %}
                                         <p>
                                             <b>Message:</b><br>
                                             <textarea class="form-control" disabled style="height:500px;font-weight:bold;">{{ clangtool_msg }}</textarea>
@@ -229,11 +229,13 @@
                                                 <b>Message:</b><br>
                                                 <textarea class="form-control" disabled style="height:500px;font-weight:bold;">{{ res.6 }}</textarea>
                                             </p>
-                                            {% elif res.0 != "Passed" and res.0 != "Failed" or res.3 %}
+                                            {% elif clangtool_passed %}
+                                            {% if res.0 != "Passed" and res.0 != "Failed" or res.3 %}
                                             <p>
                                                 <b>Message:</b><br>
                                                 <textarea class="form-control" disabled style="height:500px;font-weight:bold;">{{ res.5 }}</textarea>
                                             </p>
+                                            {% endif %}
                                             {% endif %}
                                             {% endif %}
                                         </div>
