@@ -86,12 +86,18 @@ def saver(sub_id):
         s.clang_tool_msg = clang_tool_msg
 
     score_received = 0
-    max_score = problem.max_score
-
+    max_score = problem.max_score 
 
     for i in range(len(testcase_id)):
-        if clang_tool_msg:
+        
+        #If compilation fails then output error as normal error for test case
+        if verdict[i]=='CE':
+            clang_tool_msg="Tool Error:Compilation Failed.\nSee below for details why compilation failed"
+            s.clang_tool_msg=clang_tool_msg
+
+        if clang_tool_msg and verdict[i]!='CE':
             verdict[i] = 'F'
+
         if verdict[i] == 'P':
             score_received += max_score
         st = models.SubmissionTestCase.objects.get(submission=submission,
@@ -99,7 +105,7 @@ def saver(sub_id):
         st.verdict = verdict[i]
         st.memory_taken = int(memory[i])
         st.time_taken = timedelta(seconds=float(time[i]))
-        if not clang_tool_msg:
+        if not clang_tool_msg or verdict[i]=='CE':
             if verdict[i] == 'F' or verdict[i] == 'P':
                 with open(os.path.join(OUTPUT_DIRECTORY, 'outputfile_' + testcase_id[i] + '.txt'),'r') as f:
                     st.msgfull = "Expected output:\n"+str(f.read())+"\nOutput:\n"+msg[i]

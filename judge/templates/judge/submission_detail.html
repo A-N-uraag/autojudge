@@ -229,7 +229,7 @@
                                                 <b>Message:</b><br>
                                                 <textarea class="form-control" disabled style="height:500px;font-weight:bold;">{{ res.6 }}</textarea>
                                             </p>
-                                            {% elif clangtool_passed %}
+                                            {% elif clangtool_passed or res.0 == "Compilation Error" %}
                                             {% if res.0 != "Passed" and res.0 != "Failed" or res.3 %}
                                             <p>
                                                 <b>Message:</b><br>

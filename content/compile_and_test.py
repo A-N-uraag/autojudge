@@ -26,8 +26,9 @@ subprocess.call(['rm', args.submission_config])
 with open(args.submission_config, "w") as stat_file:
     stat_file.write("{}\n{}\n".format(sub_info[0], sub_info[1]))
 
-# Run clangjudge
-if sub_info[3]:
+
+# Run clangjudge only for c/c++ submissions
+if (sub_info[2]==".c" or sub_info[2]==".cpp") and sub_info[3]:
     try:
         subprocess.check_output(['./judgeClangTool/clangjudge', sub_info[3],
                                 'submissions/submission_{}{}'.format(sub_info[1], sub_info[2])])
