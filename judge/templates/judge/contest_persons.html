@@ -1,9 +1,9 @@
 {% extends 'judge/base.html' %}
 
-{% block title %}{{ type }}s | Contest {{ contest_id }}{% endblock %}
+{% block title %}{{ type }}s | {{ index_string }} {{ contest_id }}{% endblock %}
 
 {% block breadcrumb %}
-<li class="breadcrumb-item"><a href="{% url 'judge:contest_detail' contest_id %}">Contest {{ contest_id }}</a></li>
+<li class="breadcrumb-item"><a href="{% url 'judge:contest_detail' contest_id %}">{{ index_string }} {{ contest_id }}</a></li>
 <li class="breadcrumb-item active" aria-current="page">{{ type }}s</li>
 {% endblock %}
 
@@ -50,7 +50,7 @@
                 {% endif %}
             </div>
             {% empty %}
-            <p>There are no {{ type|lower }}s for this contest.</p>
+            <p>There are no {{ type|lower }}s for this {{ index_string }}.</p>
             {% endfor %}
         </div>
     </div>

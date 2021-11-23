@@ -23,6 +23,26 @@ def _check_and_remove(*fullpaths):
         if os.path.exists(fullpath):
             os.remove(fullpath)
 
+def update_index_string(index_str: str, index_str_plural: str) -> Tuple[bool, ValidationError]:
+    """
+    Function to update :class:`~judge.models.IndexString`.
+    """
+    indexString = models.IndexString.objects.filter(pk=1)
+    if not indexString.exists():
+        return (False, ValidationError('IndexString object not found'))
+    indexString = indexString[0]
+
+    indexString.index_str = index_str
+    indexString.index_str_plural = index_str_plural
+    try:
+        indexString.save()
+    # Catch any weird errors that might pop up during the modification
+    except Exception as other_err:
+        print_exc()
+        return (False, ValidationError(str(other_err)))
+    else:
+        return (True, None)
+
 
 def process_contest(contest_name: str, contest_start: datetime, contest_soft_end: datetime,
                     contest_hard_end: datetime, penalty: float, submission_limit: int,
