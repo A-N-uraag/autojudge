@@ -175,7 +175,7 @@ class Submission(models.Model):
         ('.none', 'NOT_SELECTED'),
         ('.c', 'C'),
         ('.cpp', 'C++'),
-        ('.py', 'Python3.6'),
+        ('.py', 'Python3.8'),
         ('.go', 'Go'),
         ('.hs', 'Haskell'),
     )
