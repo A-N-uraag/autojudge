@@ -46,6 +46,23 @@ class MultiEmailField(forms.Field):
         return value
 
 
+class IndexStringForm(forms.Form):
+    """
+    Form for editing index string
+    """
+    index_str = forms.CharField(label='Index String', min_length=1, max_length=25,
+                                   strip=True,
+                                   widget=forms.TextInput(attrs={'class': 'form-control'}),
+                                   help_text='Enter string to replace \'Contest\' string.')
+    """Index String"""
+
+    index_str_plural = forms.CharField(label='Plural Index String', min_length=1,
+                                   max_length=25, strip=True,
+                                   widget=forms.TextInput(attrs={'class': 'form-control'}),
+                                   help_text='Enter plural form of above string \
+                                             (to replace \'Contests\' string).')
+    """Plural Index String"""
+
 class NewContestForm(forms.Form):
     """
     Form for creating a new Contest.
