@@ -251,6 +251,8 @@ class NewProblemForm(forms.Form):
         ('all', 'All checks'),
         ('string-all-check', 'All string checks'),
         ('strcmp-check', 'strcmp check'),
+        ('strcpy-check', 'strcpy check'),
+        ('strlen-check', 'strlen check'),
         ('sys-all-check', 'All system call checks'),
     ]
     

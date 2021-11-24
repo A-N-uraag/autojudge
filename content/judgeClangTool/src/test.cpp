@@ -28,8 +28,11 @@ using namespace clang;
 using namespace clang::tooling;
 using namespace llvm;
 
+cl::opt<bool> AllChecks("all",cl::desc("Enables all checks"),cl::init(false));
 cl::opt<bool> StringAllChecks("string-all-check",cl::desc("Enables all string checks"),cl::init(false));
 cl::opt<bool> StrCmpCheck("strcmp-check",cl::desc("Enables strcmp  checks"),cl::init(false));
+cl::opt<bool> StrCpyCheck("strcpy-check",cl::desc("Enables strcpy  checks"),cl::init(false));
+cl::opt<bool> StrLenCheck("strlen-check",cl::desc("Enables strlen  checks"),cl::init(false));
 cl::opt<bool> SystemAllChecks("sys-all-check",cl::desc("Enables all system checks"),cl::init(false));
 
 enum FAILTYPE{
@@ -44,12 +47,18 @@ static const char *strFuncs[] = {
     "strlen", "strcat",  "strncat", "strcpy",  "strncpy", "strcmp",  "strncmp",
     "strchr", "strrchr", "strstr",  "strcspn", "strspn",  "strpbrk", "strtok"};
 
+static const char *sysFuncs[] ={
+    "syscall","system","fork","exec","wait","kill","rmdir"};
+
 class UsedVar : public RecursiveASTVisitor<UsedVar> {
 
 public:
-  size_t length;
+  size_t strFunlength;
+  size_t sysFunlength;
   explicit UsedVar(ASTContext *Context) : Context(Context) {
-    length = sizeof(strFuncs) / sizeof(strFuncs[0]);
+   
+    strFunlength = sizeof(strFuncs) / sizeof(strFuncs[0]);
+    sysFunlength = sizeof(sysFuncs) / sizeof(sysFuncs[0]);
   }
 
   void printMsg(Stmt *qst,std::string functionName,FAILTYPE fail) {
@@ -67,8 +76,8 @@ public:
     // Only function definitions (with bodies), not declarations.
     auto FuncDecl = cl->getDirectCallee();
     if(StringAllChecks){
-     for (int i = 0; i < length; i++) {
-        if (FuncDecl && FuncDecl->getNameInfo().getAsString() == strFuncs[i]) {
+     for (int i = 0; i < strFunlength; i++) {
+	if (FuncDecl && FuncDecl->getNameInfo().getAsString() == strFuncs[i]) {
         // if (Context->getSourceManager().isInMainFile(f->getLocation()))
         // llvm::outs() << f->getNameInfo().getAsString() << "\n";
          if (Context->getSourceManager().isInSystemHeader(FuncDecl->getLocation()))
@@ -83,6 +92,26 @@ public:
              printMsg(cl,"strcmp",StringFailType);
       }
     }
+    else if(StrLenCheck){
+      if (FuncDecl && FuncDecl->getNameInfo().getAsString() == "strlen") {
+         if (Context->getSourceManager().isInSystemHeader(FuncDecl->getLocation()))
+             printMsg(cl,"strlen",StringFailType);
+      }
+    }
+    else if(StrCpyCheck){
+      if (FuncDecl && FuncDecl->getNameInfo().getAsString() == "strcpy") {
+         if (Context->getSourceManager().isInSystemHeader(FuncDecl->getLocation()))
+             printMsg(cl,"strcpy",StringFailType);
+      }
+    }
+    if(SystemAllChecks){
+     for (int i = 0; i < sysFunlength; i++) {
+         if (FuncDecl && FuncDecl->getNameInfo().getAsString() == sysFuncs[i]) {
+           if (Context->getSourceManager().isInSystemHeader(FuncDecl->getLocation()))
+               printMsg(cl,sysFuncs[i],SysFailType);
+         }
+       }
+     }
     return true;
   }
 
@@ -120,11 +149,22 @@ int main(int argc, const char **argv) {
 
   cl::ParseCommandLineOptions((argc-1),argv);
   
+  
+   //outs()<<StringAllChecks<<"\n";
+   //outs()<<StrCmpCheck<<"\n";
+   //outs()<<SystemAllChecks<<"\n";
+  
+  CommonOptionsParser OptionsParser(argc, argv, MyToolCategory);
+
+  if(AllChecks){
+    	StringAllChecks=true;
+    	SystemAllChecks=true;
+  }
+
   //outs()<<StringAllChecks<<"\n";
   //outs()<<StrCmpCheck<<"\n";
   //outs()<<SystemAllChecks<<"\n";
- 
-  CommonOptionsParser OptionsParser(argc, argv, MyToolCategory);
+
 
   ClangTool Tool(OptionsParser.getCompilations(),
                  OptionsParser.getSourcePathList());
