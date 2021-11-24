@@ -37,6 +37,18 @@ def comment_upload_location(instance, filename):
     return 'content/comment/{}.yml'.format(instance.id)
 
 
+class IndexString(models.Model):
+    """
+    Model for global string ('Contests' string on index) 
+    """
+
+    index_str = models.CharField(max_length=25, default='Contest')
+    """'Contest' string on index page"""
+
+    index_str_plural = models.CharField(max_length=25, default='Contests')
+    """'Contests' string on index page"""
+
+
 class Contest(models.Model):
     """
     Model for Contest.
@@ -175,7 +187,7 @@ class Submission(models.Model):
         ('.none', 'NOT_SELECTED'),
         ('.c', 'C'),
         ('.cpp', 'C++'),
-        ('.py', 'Python3.6'),
+        ('.py', 'Python3.8'),
         ('.go', 'Go'),
         ('.hs', 'Haskell'),
     )

@@ -1,6 +1,6 @@
 {% extends "judge/base.html" %}
 
-{% block title %}New Contest{% endblock %}
+{% block title %}New {{ index_string }}{% endblock %}
 
 {% block styles %}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
@@ -24,13 +24,13 @@
 {% endblock %}
 
 {% block breadcrumb %}
-<li class="breadcrumb-item active" aria-current="page">New Contest</li>
+<li class="breadcrumb-item active" aria-current="page">New {{ index_string }}</li>
 {% endblock %}
 
 {% block content %}
 <div class="row my-2">
     <div class="col-12">
-        <h2>New Contest</h2>
+        <h2>New {{ index_string }}</h2>
     </div>
 </div>
 <div class="row">
