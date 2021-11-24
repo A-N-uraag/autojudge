@@ -466,17 +466,21 @@ def problem_detail(request, problem_id):
         user_submission_num = len(Submission.objects.filter(problem=problem_id,participant=user.email))+1
         if (user_submission_num <= problem.contest.submission_limit and
             timezone.now() < problem.contest.hard_end_datetime):
-            if request.method == 'POST':
-                form = NewSubmissionForm(request.POST, request.FILES)
-                if form.is_valid():
-                    status, maybe_error = handler.process_submission(
-                        problem_id, user.email, **form.cleaned_data, timestamp=timezone.now())
-                    if status:
-                        return redirect(reverse('judge:problem_submissions', args=(problem_id,)))
-                    if not status:
-                        form.add_error(None, maybe_error)
+            status, file_exts_or_error = handler.get_problem_file_exts(problem_id)
+            if status:
+                if request.method == 'POST':
+                    form = NewSubmissionForm(request.POST, request.FILES, choices=file_exts_or_error)
+                    if form.is_valid():
+                        status, maybe_error = handler.process_submission(
+                            problem_id, user.email, **form.cleaned_data, timestamp=timezone.now())
+                        if status:
+                            return redirect(reverse('judge:problem_submissions', args=(problem_id,)))
+                        if not status:
+                            form.add_error(None, maybe_error)
+                else:
+                    form = NewSubmissionForm(choices=file_exts_or_error)
             else:
-                form = NewSubmissionForm()
+                return handler404(request)
             context['form'] = form
         context['user_submission_num'] = user_submission_num
     if perm is True:
