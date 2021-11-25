@@ -121,7 +121,7 @@ class Problem(models.Model):
     difficulty = models.PositiveSmallIntegerField(default=0)
     """Problem difficulty"""
 
-    time_limit = models.DurationField(default=timedelta(seconds=10))
+    time_limit = models.DurationField()
     """Problem time limit"""
 
     # Currently this is specified in mega-bytes

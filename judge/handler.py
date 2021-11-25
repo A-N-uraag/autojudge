@@ -209,10 +209,17 @@ def process_problem(contest_id: int,
         # Create the problem directory explictly if not yet created
         # This will happen when both compilation_script and test_script were None
         os.makedirs(os.path.join('content', 'problems', new_problem.code))
+		
+    #DurationField in Django only has days/seconds/microsecond fields. 
+    #We assume input in seconds to be in miiliseconds
+    millisec=new_problem.time_limit.seconds
+
+    #Converting millisecs to microseconds
+    new_problem.time_limit=timedelta(microseconds=millisec*1000)		
 
     #checking incase memory limit was set to 0 accidentally
     if new_problem.memory_limit==0:
-        new_problem.memory_limit=1 #Defaulting it to 1 MB
+        new_problem.memory_limit=1 #Defaulting it to 1 KB
 
     
     if no_comp_script:
@@ -519,7 +526,7 @@ def process_submission(problem_id: str, participant_id: str, file_type: str,
         f.write('{}\n'.format(problem.pk))
         f.write('{}\n'.format(sub.pk))
         f.write('{}\n'.format(file_type))
-        f.write('{}\n'.format(int(problem.time_limit.total_seconds())))
+        f.write('{}\n'.format((problem.time_limit.total_seconds())))
         f.write('{}\n'.format(problem.memory_limit))
         for testcase in testcases:
             f.write('{}\n'.format(testcase.pk))
@@ -986,7 +993,7 @@ def get_submission_status(submission_id: str):
         else:
             private_count+=1
             count = private_count
-        verdict_dict[testcase.pk] = (st.get_verdict_display, st.time_taken,
+        verdict_dict[testcase.pk] = (st.get_verdict_display, st.time_taken.total_seconds(),
                                      st.memory_taken, testcase.public, count,
                                      st.message, st.msgfull)
 
