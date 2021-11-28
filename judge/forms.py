@@ -46,6 +46,23 @@ class MultiEmailField(forms.Field):
         return value
 
 
+class IndexStringForm(forms.Form):
+    """
+    Form for editing index string
+    """
+    index_str = forms.CharField(label='Index String', min_length=1, max_length=25,
+                                   strip=True,
+                                   widget=forms.TextInput(attrs={'class': 'form-control'}),
+                                   help_text='Enter string to replace \'Contest\' string.')
+    """Index String"""
+
+    index_str_plural = forms.CharField(label='Plural Index String', min_length=1,
+                                   max_length=25, strip=True,
+                                   widget=forms.TextInput(attrs={'class': 'form-control'}),
+                                   help_text='Enter plural form of above string \
+                                             (to replace \'Contests\' string).')
+    """Plural Index String"""
+
 class NewContestForm(forms.Form):
     """
     Form for creating a new Contest.
@@ -225,17 +242,17 @@ class NewProblemForm(forms.Form):
                                                the problem. If this is unknown, leave it as 0.')
     """Problem Difficulty Field"""
 
-    time_limit = forms.DurationField(label='Time Limit (in seconds)',
+    time_limit = forms.DurationField(label='Time Limit (in milliseconds)',
                                      widget=forms.NumberInput(attrs={'class': 'form-control'}),
-                                     initial=0, help_text='Specify a time limit in seconds \
+                                     initial=0, help_text='Specify a time limit in milliseconds \
                                                            for the execution of the program.')
     """Problem Time limit"""
 
-    memory_limit = forms.IntegerField(label='Memory Limit (in MB)',
+    memory_limit = forms.IntegerField(label='Memory Limit (in KB)',
                                       widget=forms.NumberInput(attrs={'class': 'form-control'}),
                                       initial=0, min_value=0,
                                       help_text='Specify a memory limit in MB for the execution \
-                                                 of the program.If not specified(set to 0) memory limit will default to 1 MB')
+                                                 of the program.If not specified(set to 0) memory limit will default to 1 KB')
     """Problem Memory limit"""
 
     file_exts = forms.CharField(label='Permitted File extensions for submissions',
@@ -328,14 +345,13 @@ class NewSubmissionForm(forms.Form):
     """
     Form to create a new Submission.
     """
-    # TODO For now choices are hard coded
-    file_type = forms.ChoiceField(label='File type', choices=[
-        ('.cpp', 'C++'),
-        ('.c', 'C'),
-        ('.py', 'Python3.8'),
-        ('.go', 'Go'),
-        ('.hs', 'Haskell'),
-    ])
+    
+    def __init__(self, *args, **kwargs):
+        choices = kwargs.pop('choices', None)
+        super(NewSubmissionForm, self).__init__(*args, **kwargs)
+        self.fields['file_type'] = forms.ChoiceField(label='File type', choices=choices)
+
+    file_type = forms.ChoiceField()
     """Choices of file type"""
 
     submission_file = forms.FileField(label='Choose file', required=True, allow_empty_file=False,

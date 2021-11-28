@@ -12,6 +12,7 @@ handler500 = views.handler500
 urlpatterns = [
     # General-purpose paths
     path('', views.index, name='index'),
+    path('edit-index-string', views.edit_index_string, name='edit_index_string'),
     path('login/', LoginView.as_view(), name='login'),
     path('logout/', LogoutView.as_view(), name='logout'),
     path('auth/', include('social_django.urls', namespace='social')),

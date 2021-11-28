@@ -3,12 +3,17 @@
 {% block content %}
 <div class="row">
     <div class="col-12">
-        <h1 class="d-inline-block">Contests</h1>
+        <h1 class="d-inline-block">{{ index_string_plural }}</h1>
         {% if user.is_authenticated and user_rank == 2 %}
         <a class="btn btn-icon btn-primary float-right" href="{% url 'judge:new_contest' %}">
             <span class="btn-inner--icon"><i class="fas fa-plus"></i></span>
-            <span class="btn-inner--text">New Contest</span>
+            <span class="btn-inner--text">New {{ index_string }}</span>
         </a>
+        <div class="float-left">
+            <a href="{% url 'judge:edit_index_string' %}" class="btn btn-primary">
+                <i class="fas fa-edit"></i>
+            </a>
+        </div>
         {% endif %}
     </div>
     <div class="col-12">
@@ -26,13 +31,13 @@
                         {% else %}<span class="badge badge-warning">Participant</span>{% endif %}
                     </div>
                 </div>
-                <a href="{% url 'judge:contest_detail' contest.pk %}" class="card-link">Go to contest page</a>
+                <a href="{% url 'judge:contest_detail' contest.pk %}" class="card-link">Go to {{ index_string }} page</a>
             </div>
         </div>
         {% endif %}
         {% empty %}
         <div class="col-12">
-            No active contests for the time being. Create a new contest or check later.
+            No active {{ index_string_plural }} for the time being.
         </div>
         {% endfor %}
     </div>

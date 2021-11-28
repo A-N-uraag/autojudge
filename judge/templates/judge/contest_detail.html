@@ -5,7 +5,7 @@
 {% block title %}{{ contest.name }}{% endblock %}
 
 {% block breadcrumb %}
-<li class="breadcrumb-item active" aria-current="page">Contest {{ contest.pk }}</li>
+<li class="breadcrumb-item active" aria-current="page">{{ index_string }} {{ contest.pk }}</li>
 {% endblock %}
 
 {% block styles %}
@@ -19,8 +19,10 @@
         enableTime: true,
         dateFormat: "Y-m-d H:i:S",
         time_24hr: true,
+        defaultHour: 0,
         allowInput: true,
         enableSeconds: true,
+        static: true,
     }
     $("#id_contest_start").flatpickr(date_options)
     $("#id_contest_soft_end").flatpickr(date_options)
@@ -44,7 +46,7 @@
             {% if curr_time < contest.hard_end_datetime %}<a class="btn btn-primary my-1 btn-sm"
                 href="{% url 'judge:new_problem' contest.pk %}">Add Problem</a>{% endif %}
             <button type="button" class="btn btn-primary my-1 btn-sm" data-toggle="modal"
-                data-target="#modal-update-dates">Update contest</button>
+                data-target="#modal-update-dates">Update {{ index_string }}</button>
             <a class="btn btn-primary my-1 btn-sm" href="{% url 'judge:contest_scores_csv' contest.pk %}">Download
                 Scores</a>
             {% endif %}
@@ -61,7 +63,7 @@
                 <div class="modal-body p-0">
                     <div class="card bg-secondary shadow border-0">
                         <div class="card-body px-lg-5 py-lg-5">
-                            <div class="text-center text-muted mb-4">UPDATE CONTEST</div>
+                            <div class="text-center text-muted mb-4">Update {{ index_string }}</div>
                             <form method="POST" role="form">
                                 {% if form.non_field_errors %}
                                 {% for nfe in form.non_field_errors %}
@@ -177,7 +179,7 @@
             {% csrf_token %}
             <button type="submit" class="btn btn-danger btn-icon">
                 <span class="btn-inner--icon"><i class="fas fa-trash pb-2"></i></span>
-                <span class="btn-inner--text">Delete Contest</span>
+                <span class="btn-inner--text">Delete {{ index_string }}</span>
             </button>
         </form>
     </div>

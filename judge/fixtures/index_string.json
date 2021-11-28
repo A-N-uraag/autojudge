@@ -1,0 +1,10 @@
+[
+    {
+      "model": "judge.IndexString",
+      "pk": 1,
+      "fields": {
+        "index_str": "Contest",
+        "index_str_plural": "Contests"
+      }
+    }
+]

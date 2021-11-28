@@ -23,6 +23,26 @@ def _check_and_remove(*fullpaths):
         if os.path.exists(fullpath):
             os.remove(fullpath)
 
+def update_index_string(index_str: str, index_str_plural: str) -> Tuple[bool, ValidationError]:
+    """
+    Function to update :class:`~judge.models.IndexString`.
+    """
+    indexString = models.IndexString.objects.filter(pk=1)
+    if not indexString.exists():
+        return (False, ValidationError('IndexString object not found'))
+    indexString = indexString[0]
+
+    indexString.index_str = index_str
+    indexString.index_str_plural = index_str_plural
+    try:
+        indexString.save()
+    # Catch any weird errors that might pop up during the modification
+    except Exception as other_err:
+        print_exc()
+        return (False, ValidationError(str(other_err)))
+    else:
+        return (True, None)
+
 
 def process_contest(contest_name: str, contest_start: datetime, contest_soft_end: datetime,
                     contest_hard_end: datetime, penalty: float, submission_limit: int,
@@ -201,10 +221,17 @@ def process_problem(contest_id: int,
         # Create the problem directory explictly if not yet created
         # This will happen when both compilation_script and test_script were None
         os.makedirs(os.path.join('content', 'problems', new_problem.code))
+		
+    #DurationField in Django only has days/seconds/microsecond fields. 
+    #We assume input in seconds to be in miiliseconds
+    millisec=new_problem.time_limit.seconds
+
+    #Converting millisecs to microseconds
+    new_problem.time_limit=timedelta(microseconds=millisec*1000)		
 
     #checking incase memory limit was set to 0 accidentally
     if new_problem.memory_limit==0:
-        new_problem.memory_limit=1 #Defaulting it to 1 MB
+        new_problem.memory_limit=1 #Defaulting it to 1 KB
 
     
     if no_comp_script:
@@ -316,6 +343,34 @@ def delete_problem(problem_id: str) -> STATUS_AND_OPT_ERROR_T:
                                 'due to the following error = {}'.format(str(other_err))))
     else:
         return (True, None)
+
+def get_problem_file_exts(problem_id: str) -> Tuple[bool, Union[ValidationError, List]]:
+    """
+    Function to get permitted file exts for a problem
+    :param problem_id: the problem ID
+    """
+    problem = models.Problem.objects.filter(code=problem_id)
+    if not problem.exists():
+        return (False, ValidationError('Problem with code = {} not found'
+                                       .format(problem_id)))
+    problem = problem[0]
+        
+    # File ext : lang 
+    choices_dict = {
+        '.cpp': 'C++',
+        '.c': 'C',
+        '.py': 'Python3.8',
+        '.go': 'Go',
+        '.hs': 'Haskell',
+    }
+
+    choices = []
+    
+    for ext in problem.file_exts.split(','):
+        if ext in choices_dict:
+            choices.append((ext, choices_dict[ext]))
+
+    return (True, choices)
 
 
 def process_person(email: str, rank: int = 0) -> STATUS_AND_OPT_ERROR_T:
@@ -484,7 +539,7 @@ def process_submission(problem_id: str, participant_id: str, file_type: str,
         f.write('{}\n'.format(sub.pk))
         f.write('{}\n'.format(file_type))
         f.write('{}\n'.format(problem.clang_checks))
-        f.write('{}\n'.format(int(problem.time_limit.total_seconds())))
+        f.write('{}\n'.format((problem.time_limit.total_seconds())))
         f.write('{}\n'.format(problem.memory_limit))
         for testcase in testcases:
             f.write('{}\n'.format(testcase.pk))
@@ -951,7 +1006,7 @@ def get_submission_status(submission_id: str):
         else:
             private_count+=1
             count = private_count
-        verdict_dict[testcase.pk] = (st.get_verdict_display, st.time_taken,
+        verdict_dict[testcase.pk] = (st.get_verdict_display, st.time_taken.total_seconds(),
                                      st.memory_taken, testcase.public, count,
                                      st.message, st.msgfull)
 

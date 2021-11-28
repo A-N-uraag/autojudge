@@ -11,6 +11,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 
 from . import handler
 from .models import Contest, Problem, TestCase, Submission
+from .forms import IndexStringForm
 from .forms import NewContestForm, AddPersonToContestForm, DeletePersonFromContestForm
 from .forms import NewProblemForm, EditProblemForm, NewSubmissionForm, AddTestCaseForm
 from .forms import NewCommentForm, UpdateContestForm, AddPosterScoreForm
@@ -85,6 +86,31 @@ def index(request):
     context['user_rank'] = 0 if user is None else user_rank
     return render(request, 'judge/index.html', context)
 
+def edit_index_string(request):
+    """
+    Renders view for the page to edit index string.
+
+    :param request: the request object used
+    :type request: HttpRequest
+    """
+    user = _get_user(request)
+    if user is None:
+        return handler404(request)
+    status, rank_or_error = handler.get_person_rank(user.email)
+    if not status or rank_or_error != 2:
+        return handler404(request)
+    if request.method == 'POST':
+        form = IndexStringForm(request.POST)
+        if form.is_valid():
+            status, maybe_error = handler.update_index_string(**form.cleaned_data)
+            if status:
+                return redirect(reverse('judge:index'))
+            else:
+                form.add_error(None, maybe_error)
+    else:
+        form = IndexStringForm()
+    context = {'form': form}
+    return render(request, 'judge/edit_index_string.html', context)
 
 def new_contest(request):
     """
@@ -440,17 +466,21 @@ def problem_detail(request, problem_id):
         user_submission_num = len(Submission.objects.filter(problem=problem_id,participant=user.email))+1
         if (user_submission_num <= problem.contest.submission_limit and
             timezone.now() < problem.contest.hard_end_datetime):
-            if request.method == 'POST':
-                form = NewSubmissionForm(request.POST, request.FILES)
-                if form.is_valid():
-                    status, maybe_error = handler.process_submission(
-                        problem_id, user.email, **form.cleaned_data, timestamp=timezone.now())
-                    if status:
-                        return redirect(reverse('judge:problem_submissions', args=(problem_id,)))
-                    if not status:
-                        form.add_error(None, maybe_error)
+            status, file_exts_or_error = handler.get_problem_file_exts(problem_id)
+            if status:
+                if request.method == 'POST':
+                    form = NewSubmissionForm(request.POST, request.FILES, choices=file_exts_or_error)
+                    if form.is_valid():
+                        status, maybe_error = handler.process_submission(
+                            problem_id, user.email, **form.cleaned_data, timestamp=timezone.now())
+                        if status:
+                            return redirect(reverse('judge:problem_submissions', args=(problem_id,)))
+                        if not status:
+                            form.add_error(None, maybe_error)
+                else:
+                    form = NewSubmissionForm(choices=file_exts_or_error)
             else:
-                form = NewSubmissionForm()
+                return handler404(request)
             context['form'] = form
         context['user_submission_num'] = user_submission_num
     if perm is True:
