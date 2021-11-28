@@ -16,8 +16,10 @@ from judge import models, handler  # noqa: E402
 CONTENT_DIRECTORY = 'content'
 TMP_DIRECTORY = 'tmp'
 TESTCASE_DIRECTORY = 'testcase'
+CLANG_JUDGE_DIRECTORY = 'judgeClangTool'
 MONITOR_DIRECTORY = os.path.join(CONTENT_DIRECTORY, TMP_DIRECTORY)
 OUTPUT_DIRECTORY = os.path.join(CONTENT_DIRECTORY, TESTCASE_DIRECTORY)
+CLANG_TOOL_DIRECTORY = os.path.join(CONTENT_DIRECTORY, CLANG_JUDGE_DIRECTORY)
 DOCKER_IMAGE_NAME = 'autojudge_docker'
 
 LS: List[str] = []
@@ -59,33 +61,62 @@ def saver(sub_id):
 
     # Delete the file after reading
     os.remove(os.path.join(MONITOR_DIRECTORY, 'sub_run_' + sub_id + '.txt'))
+    
+    clang_tool_msg=""
 
+    
+    #Checking if any tool output exists or not 
+    if os.path.isfile(os.path.join(MONITOR_DIRECTORY,  'sub_clangjudge_'+sub_id+'.log')):
+        #If so copy output to variable
+        with open(os.path.join(MONITOR_DIRECTORY, 'sub_clangjudge_'+sub_id+'.log'),'r',encoding='utf-8') as f:
+            clang_tool_msg=str(f.read())
+        
+        #Remove file after copying output
+        os.remove(os.path.join(MONITOR_DIRECTORY,'sub_clangjudge_'+sub_id+'.log'))
+
+        #Priting to see if output is correct or not
+        #print(clang_tool_msg)
+
+    #TODO:Handle displaying of errors when clang tool runs into a general compilation error [ should be displayed normally as error for submission ]
+
+    
     problem = models.Problem.objects.get(pk=problem)
     s = models.Submission.objects.get(pk=submission)
+    if clang_tool_msg:
+        s.clang_tool_msg = clang_tool_msg
 
     score_received = 0
-    max_score = problem.max_score
-
+    max_score = problem.max_score 
 
     for i in range(len(testcase_id)):
+        
+        #If compilation fails then output error as normal error for test case
+        if verdict[i]=='CE':
+            clang_tool_msg="Tool Error:Compilation Failed.\nSee below for details why compilation failed"
+            s.clang_tool_msg=clang_tool_msg
+
+        if clang_tool_msg and verdict[i]!='CE':
+            verdict[i] = 'F'
+
         if verdict[i] == 'P':
             score_received += max_score
         st = models.SubmissionTestCase.objects.get(submission=submission,
-                                                   testcase=testcase_id[i])
+                                                testcase=testcase_id[i])
         st.verdict = verdict[i]
         st.memory_taken = int(memory[i])
         st.time_taken = timedelta(seconds=float(time[i]))
-        if verdict[i] == 'F' or verdict[i] == 'P':
-            with open(os.path.join(OUTPUT_DIRECTORY, 'outputfile_' + testcase_id[i] + '.txt'),'r') as f:
-                st.msgfull = "Expected output:\n"+str(f.read())+"\nOutput:\n"+msg[i]
-                if models.TestCase.objects.get(pk=testcase_id[i]).public:
-                    st.message = st.msgfull
-        else:
-            st.msgfull = msg[i] if len(msg[i]) < 1000 else msg[i][:1000] + '\\nMessage Truncated'
-            if not models.TestCase.objects.get(pk=testcase_id[i]).public and verdict[i] == 'RE':
-                st.message = msg[i].splitlines()[-1]
+        if not clang_tool_msg or verdict[i]=='CE':
+            if verdict[i] == 'F' or verdict[i] == 'P':
+                with open(os.path.join(OUTPUT_DIRECTORY, 'outputfile_' + testcase_id[i] + '.txt'),'r') as f:
+                    st.msgfull = "Expected output:\n"+str(f.read())+"\nOutput:\n"+msg[i]
+                    if models.TestCase.objects.get(pk=testcase_id[i]).public:
+                        st.message = st.msgfull
             else:
-                st.message = st.msgfull
+                st.msgfull = msg[i] if len(msg[i]) < 1000 else msg[i][:1000] + '\\nMessage Truncated'
+                if not models.TestCase.objects.get(pk=testcase_id[i]).public and verdict[i] == 'RE':
+                    st.message = msg[i].splitlines()[-1]
+                else:
+                    st.message = st.msgfull
         
         st.save()
         
@@ -150,6 +181,17 @@ os.chdir(cur_path)
 
 print("Docker image: {} built successfully!".format(DOCKER_IMAGE_NAME))
 
+# Move to ./contest/judgeClangtool
+os.chdir(os.path.join(cur_path, CLANG_TOOL_DIRECTORY))
+call(['./build.sh'])
+
+if os.path.isfile('clangjudge'):
+    print("Clang Judge tool built successfully!")
+else:
+    print("Clang Judge tool build failed!")
+
+# Move back to old directory
+os.chdir(cur_path)
 
 if not os.path.exists(MONITOR_DIRECTORY):
     os.makedirs(MONITOR_DIRECTORY)

@@ -815,6 +815,8 @@ def submission_detail(request, submission_id: str):
             context['final_score'] = info_or_error[1][3]
             context['timestamp'] = info_or_error[1][4]
             context['file_type'] = info_or_error[1][5]
+            context['clangtool_passed'] = False if info_or_error[1][6] else True
+            context['clangtool_msg'] = info_or_error[1][6]
         else:
             return handler404(request)
 

@@ -118,6 +118,56 @@
     </div>
     <div class="col-12">
         <div class="bg-dark p-2">
+            <h3 class="text-white m-0">Clang Checks</h3>
+        </div>
+        <div class="row m-2 p-0">
+            <div class="col-md-6 m-0 py-3 px-2 border-bottom">
+                <a href="#" data-toggle="modal" data-target="#modal-clang">Clang Checks</a>
+                {% if clangtool_passed %}
+                <span class="badge badge-pill badge-success">Passed/Running</span>
+                {% else %}
+                <span class="badge badge-pill badge-danger">Failed</span>
+                {% endif %}
+            </div>
+            <div class="modal fade" id="modal-clang" tabindex="-1" role="dialog" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+                    <div class="modal-content">
+                        <div class="modal-body p-0">
+                            <div class="card shadow border-0">
+                                <div class="card-body px-lg-5 py-lg-5">
+                                    <div class="text-center mb-4">
+                                        Clang Checks
+                                    </div>
+                                    <div>
+                                        <table class="table">
+                                            <tbody>
+                                                <tr>
+                                                    <th>Status</th>
+                                                    <td>
+                                                    {% if clangtool_passed %}
+                                                    <span class="badge badge-pill badge-success">Passed/Running</span>
+                                                    {% else %}
+                                                    <span class="badge badge-pill badge-danger">Failed</span>
+                                                    {% endif %}
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                        {% if not clangtool_passed %}
+                                        <p>
+                                            <b>Message:</b><br>
+                                            <textarea class="form-control" disabled style="height:500px;font-weight:bold;">{{ clangtool_msg }}</textarea>
+                                        </p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="bg-dark p-2">
             <h3 class="text-white m-0">Test Cases</h3>
         </div>
         <div class="row m-2 p-0">
@@ -179,11 +229,13 @@
                                                 <b>Message:</b><br>
                                                 <textarea class="form-control" disabled style="height:500px;font-weight:bold;">{{ res.6 }}</textarea>
                                             </p>
-                                            {% elif res.0 != "Passed" and res.0 != "Failed" or res.3 %}
+                                            {% elif clangtool_passed or res.0 == "Compilation Error" %}
+                                            {% if res.0 != "Passed" and res.0 != "Failed" or res.3 %}
                                             <p>
                                                 <b>Message:</b><br>
                                                 <textarea class="form-control" disabled style="height:500px;font-weight:bold;">{{ res.5 }}</textarea>
                                             </p>
+                                            {% endif %}
                                             {% endif %}
                                             {% endif %}
                                         </div>

@@ -132,6 +132,9 @@ class Problem(models.Model):
     file_exts = models.CharField(max_length=100, default='.py,.cpp')
     """Accepted file extensions for submissions to problem"""
 
+    clang_checks = models.CharField(max_length=300, default='--all')
+    """Flags for clang checks"""
+
     starting_code = models.FileField(upload_to=starting_code_name, null=True)
     """Problem starting code"""
 
@@ -201,6 +204,9 @@ class Submission(models.Model):
 
     timestamp = models.DateTimeField()
     """Timestamp of submission"""
+
+    clang_tool_msg = models.TextField(default='')
+    """Message placeholder, used for displaying clang tool output"""
 
     judge_score = models.PositiveSmallIntegerField(default=0)
     """Judge score"""

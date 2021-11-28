@@ -155,6 +155,8 @@ def process_problem(contest_id: int,
     :type statement: int
     :param file_exts: Accepted file format for submissions
     :type statement: str
+    :param clang_checks: Placeholder clang checks
+    :type statement: str
     :param starting_code: Starting code for the problem
     :type statement: Optional[InMemoryUploadedFile]
     :param max_score: Maximum judge score per test case for the problem
@@ -181,6 +183,16 @@ def process_problem(contest_id: int,
         kwargs['input_format'] = 'No input format specified.'
     if kwargs.get('output_format') == NO_INPUT_QUILL:
         kwargs['output_format'] = 'No output format specified.'
+
+    # Append flags to a single string
+    clang_checks_list = kwargs.get('clang_checks')
+    kwargs['clang_checks'] = ''
+    if clang_checks_list:
+        for index, flag in enumerate(clang_checks_list):
+            kwargs['clang_checks'] += '--' + flag
+            if index + 1 != len(clang_checks_list):
+                kwargs['clang_checks'] += ' '
+
 
     # if either one of compilation_script or test_script is None,
     # we create a Problem with the default compilation script and/or test_script
@@ -526,6 +538,7 @@ def process_submission(problem_id: str, participant_id: str, file_type: str,
         f.write('{}\n'.format(problem.pk))
         f.write('{}\n'.format(sub.pk))
         f.write('{}\n'.format(file_type))
+        f.write('{}\n'.format(problem.clang_checks))
         f.write('{}\n'.format((problem.time_limit.total_seconds())))
         f.write('{}\n'.format(problem.memory_limit))
         for testcase in testcases:
@@ -998,7 +1011,8 @@ def get_submission_status(submission_id: str):
                                      st.message, st.msgfull)
 
     score_tuple = (submission.judge_score, submission.poster_score, submission.linter_score,
-                   submission.final_score, submission.timestamp, submission.file_type)
+                   submission.final_score, submission.timestamp, submission.file_type,
+                   submission.clang_tool_msg)
     return (True, (verdict_dict, score_tuple))
 
 
