@@ -65,22 +65,34 @@ run_submission() {
   TimeLimit=0
   fileSizePanic=0
   VERDICT=""
+  
+  # This is what we do:
+  # - Run the timer_tool wrapped with the timeout tool, and then we send this process in the background
+  #	- We poll the background process to check if it is alive while doing so we also check the output file size
+  #     - If output file size exceeds limit [> 100KB for now] kill process and we show appropriate message
+  # 	- if file size is not exceeding we follow with timeout and memout checks
+  #     - If no, return the appropriate errors
+  #     - If yes, re-run again to get the final submission output
+  #       This is then checked normally using a diff
+  #       The status is appended to the verdict_string along with the memory and time consumed
+
 
   
   # Wrapping timer_tool(runsolver) with timeout tool as timeout tool support seconds below 0(0.001s) 
-  # First two lines specify the flags required
+  # For runsolver first two lines specify the flags required
   # -w /dev/null pipes output of the tool to /dev/null, --vsize-limit gives the virtual size limit
   # --cores 0 limits to only one core,
   # --var provides a file with specific flags which are used for checking
   # The last line runs the process
   timeout -s 15 $TLIMIT timer_tool -w /dev/null --vsize-limit $MLIMIT --cores 0 \
              --var ${TMP}/submission_status_${SID}_${TID}.txt \
-             ${SUB_FDR}/submission_${SID} < ${TEST_FDR}/inputfile_${TID}.txt > ${TMP}/sub_output_${SID}_${TID}.txt 2> /dev/null &
+             ${SUB_FDR}/submission_${SID} < ${TEST_FDR}/inputfile_${TID}.txt > ${TMP}/sub_output_${SID}_${TID}.txt 2> /dev/null & #Run this in background
   
-  limit_proc_id=$!
+  limit_proc_id=$! #Getting PID of background process
   
-  wasNotFound=0
+  wasNotFound=0 #Setting flag to poll background process
 
+  #Polling background process
   while [ "$wasNotFound" != 1 ] 
   do
 	  ps | grep -q "$limit_proc_id"
@@ -93,23 +105,17 @@ run_submission() {
 	  fi
   done 
 
+  #If we panicked with file size checks we output message 
   if [ "$fileSizePanic" = 1 ] ; then
 	VERDICT=$(error_code_to_string $RE ${TID})
-	echo "Output limit exceeded!" > ${TMP}/sub_run_${SID}_${TID}.log
+	echo "Output Text limit exceeded!" > ${TMP}/sub_run_${SID}_${TID}.log
 	LIMITFLAG=1
   fi 
 
-  wait $limit_proc_id 
+  wait $limit_proc_id #This is blocking call and waits for the background process to end
 
-  # This is what we do:
-  # - Run the timer_tool wrapped with the timeout tool, and then check if the limits are maintained
-  #     - If no, return the appropriate errors
-  #     - If yes, re-run again to get the final submission output
-  #       This is then checked normally using a diff
-  #       The status is appended to the verdict_string along with the memory and time consumed
-
-  
-  #if the submission timed out
+    
+  # We get the exit status of the background process and check if the submission timed out
   if [ "$?" = 124 ] ; then
 	
 	 # Remove the log file generated from runsolver
@@ -119,7 +125,8 @@ run_submission() {
 	 echo "Time limit exceeded" > ${TMP}/sub_run_${SID}_${TID}.log
     	 TimeLimit=1
 	 LIMITFLAG=1
-
+  
+  # Else we check for MLE
   else
   	# Make all the flags as env vars for checking and remove this file
     	 . ${TMP}/submission_status_${SID}_${TID}.txt
