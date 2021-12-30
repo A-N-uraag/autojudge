@@ -143,8 +143,13 @@ run_submission() {
     
     case "$?" in
       "0")
-          ./${PROB_FDR}/${PROB_CODE}/test_script ${TEST_FDR}/outputfile_${TID}.txt ${TMP}/sub_output_${SID}_${TID}.txt > /dev/null
-          VERDICT=$(error_code_to_string $? ${TID})
+          if ! file --mime -b ${TMP}/sub_output_${SID}_${TID}.txt | grep -i -q "ascii" ; then  # checking for ASCII output file
+            echo "Output has invalid text" > ${TMP}/sub_run_${SID}_${TID}.log
+            VERDICT=$(error_code_to_string $RE ${TID})
+          else
+            ./${PROB_FDR}/${PROB_CODE}/test_script ${TEST_FDR}/outputfile_${TID}.txt ${TMP}/sub_output_${SID}_${TID}.txt > /dev/null
+            VERDICT=$(error_code_to_string $? ${TID})
+          fi
           ;;
       *)
           echo "\nExit code: $?" >> ${TMP}/sub_run_${SID}_${TID}.log

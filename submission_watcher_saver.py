@@ -45,121 +45,142 @@ def saver(sub_id):
         # SUBMISSION_ID
         # TESTCASEID VERDICT TIME MEMORY MESSAGE
         # Read the output into verdict, memory and time.
-        lines = [line[:-1] for line in f.readlines()]
-        problem = lines[0]
-        submission = lines[1]
-        testcase_id, verdict, time, memory, msg = [], [], [], [], []
+        try:
+            lines = [line[:-1] for line in f.readlines()]
+            problem = lines[0]
+            submission = lines[1]
+            testcase_id, verdict, time, memory, msg = [], [], [], [], []
+        except Exception as err:
+            print("Internal Error: Can't read sub txt file")
         for line in lines[2:]:
-            sep = line.split(' ', maxsplit=4)
-            testcase_id.append(sep[0])
-            verdict.append(sep[1])
-            time.append(sep[2])
-            memory.append(sep[3])
-            with open(os.path.join(MONITOR_DIRECTORY, sep[4])) as log_file:
-                msg.append(str(log_file.read()))
-            os.remove(os.path.join(MONITOR_DIRECTORY, sep[4]))  # Remove after reading
+            try:
+                sep = line.split(' ', maxsplit=4)
+                testcase_id.append(sep[0])
+                verdict.append(sep[1])
+                time.append(sep[2])
+                memory.append(sep[3])
+            except Exception as err:
+                print("Internal Error: Can't split sub txt string")
+            try:
+                with open(os.path.join(MONITOR_DIRECTORY, sep[4])) as log_file:
+                    msg.append(str(log_file.read()))
+            except Exception as err:
+                msg.append("Output has invalid text")
+                verdict.pop()
+                verdict.append('RE')
+            try:
+                os.remove(os.path.join(MONITOR_DIRECTORY, sep[4]))  # Remove after reading
+            except Exception as err:
+                print("Internal error: can't remove sub log file")
 
-    # Delete the file after reading
-    os.remove(os.path.join(MONITOR_DIRECTORY, 'sub_run_' + sub_id + '.txt'))
+    try:
+        # Delete the file after reading
+        os.remove(os.path.join(MONITOR_DIRECTORY, 'sub_run_' + sub_id + '.txt'))
+    except Exception as err:
+        print("Internal error: can't remove sub txt file")
     
     clang_tool_msg=""
 
-    
-    #Checking if any tool output exists or not 
-    if os.path.isfile(os.path.join(MONITOR_DIRECTORY,  'sub_clangjudge_'+sub_id+'.log')):
-        #If so copy output to variable
-        with open(os.path.join(MONITOR_DIRECTORY, 'sub_clangjudge_'+sub_id+'.log'),'r',encoding='utf-8') as f:
-            clang_tool_msg=str(f.read())
-        
-        #Remove file after copying output
-        os.remove(os.path.join(MONITOR_DIRECTORY,'sub_clangjudge_'+sub_id+'.log'))
+    try:
+        #Checking if any tool output exists or not 
+        if os.path.isfile(os.path.join(MONITOR_DIRECTORY,  'sub_clangjudge_'+sub_id+'.log')):
+            #If so copy output to variable
+            with open(os.path.join(MONITOR_DIRECTORY, 'sub_clangjudge_'+sub_id+'.log'),'r',encoding='utf-8') as f:
+                clang_tool_msg=str(f.read())
+            
+            #Remove file after copying output
+            os.remove(os.path.join(MONITOR_DIRECTORY,'sub_clangjudge_'+sub_id+'.log'))
 
-        #Priting to see if output is correct or not
-        #print(clang_tool_msg)
+            #Priting to see if output is correct or not
+            #print(clang_tool_msg)
 
-    #TODO:Handle displaying of errors when clang tool runs into a general compilation error [ should be displayed normally as error for submission ]
+        #TODO:Handle displaying of errors when clang tool runs into a general compilation error [ should be displayed normally as error for submission ]
+    except:
+        print("Internal error: Clang tool log error")
 
-    
-    problem = models.Problem.objects.get(pk=problem)
-    s = models.Submission.objects.get(pk=submission)
-    if clang_tool_msg:
-        s.clang_tool_msg = clang_tool_msg
+    try:
+        problem = models.Problem.objects.get(pk=problem)
+        s = models.Submission.objects.get(pk=submission)
+        if clang_tool_msg:
+            s.clang_tool_msg = clang_tool_msg
 
-    score_received = 0
-    max_score = problem.max_score 
+        score_received = 0
+        max_score = problem.max_score 
 
-    for i in range(len(testcase_id)):
-        
-        #If compilation fails then output error as normal error for test case
-        if verdict[i]=='CE':
-            clang_tool_msg="Tool Error:Compilation Failed.\nSee below for details why compilation failed"
-            s.clang_tool_msg=clang_tool_msg
+        for i in range(len(testcase_id)):
+            
+            #If compilation fails then output error as normal error for test case
+            if verdict[i]=='CE':
+                clang_tool_msg="Tool Error:Compilation Failed.\nSee below for details why compilation failed"
+                s.clang_tool_msg=clang_tool_msg
 
-        if clang_tool_msg and verdict[i]!='CE':
-            verdict[i] = 'F'
+            if clang_tool_msg and verdict[i]!='CE':
+                verdict[i] = 'F'
 
-        if verdict[i] == 'P':
-            score_received += max_score
-        st = models.SubmissionTestCase.objects.get(submission=submission,
-                                                testcase=testcase_id[i])
-        st.verdict = verdict[i]
-        st.memory_taken = int(memory[i])
-        st.time_taken = timedelta(seconds=float(time[i]))
-        if not clang_tool_msg or verdict[i]=='CE':
-            if verdict[i] == 'F' or verdict[i] == 'P':
-                with open(os.path.join(OUTPUT_DIRECTORY, 'outputfile_' + testcase_id[i] + '.txt'),'r') as f:
-                    st.msgfull = "Expected output:\n"+str(f.read())+"\nOutput:\n"+msg[i]
-                    if models.TestCase.objects.get(pk=testcase_id[i]).public:
-                        st.message = st.msgfull
-            else:
-                st.msgfull = msg[i] if len(msg[i]) < 1000 else msg[i][:1000] + '\\nMessage Truncated'
-                if not models.TestCase.objects.get(pk=testcase_id[i]).public and verdict[i] == 'RE':
-                    st.message = msg[i].splitlines()[-1]
+            if verdict[i] == 'P':
+                score_received += max_score
+            st = models.SubmissionTestCase.objects.get(submission=submission,
+                                                    testcase=testcase_id[i])
+            st.verdict = verdict[i]
+            st.memory_taken = int(memory[i])
+            st.time_taken = timedelta(seconds=float(time[i]))
+            if not clang_tool_msg or verdict[i]=='CE':
+                if verdict[i] == 'F' or verdict[i] == 'P':
+                    with open(os.path.join(OUTPUT_DIRECTORY, 'outputfile_' + testcase_id[i] + '.txt'),'r') as f:
+                        st.msgfull = "Expected output:\n"+str(f.read())+"\nOutput:\n"+msg[i]
+                        if models.TestCase.objects.get(pk=testcase_id[i]).public:
+                            st.message = st.msgfull
                 else:
-                    st.message = st.msgfull
-        
-        st.save()
-        
-    s.judge_score = score_received
+                    st.msgfull = msg[i] if len(msg[i]) < 1000 else msg[i][:1000] + '\\nMessage Truncated'
+                    if not models.TestCase.objects.get(pk=testcase_id[i]).public and verdict[i] == 'RE':
+                        st.message = msg[i].splitlines()[-1]
+                    else:
+                        st.message = st.msgfull
+            
+            st.save()
+            
+        s.judge_score = score_received
 
-    if s.problem.contest.enable_linter_score:
-        if s.file_type == '.py':
-            checker = Checker(
-                        os.path.join(CONTENT_DIRECTORY,
-                                     'submissions', 'submission_{}.py'.format(submission)),
-                        quiet=True)
-            checker.check_all()
-            s.linter_score = _compute_lint_score(checker.report)
-    current_final_score = s.judge_score + s.poster_score + s.linter_score
+        if s.problem.contest.enable_linter_score:
+            if s.file_type == '.py':
+                checker = Checker(
+                            os.path.join(CONTENT_DIRECTORY,
+                                        'submissions', 'submission_{}.py'.format(submission)),
+                            quiet=True)
+                checker.check_all()
+                s.linter_score = _compute_lint_score(checker.report)
+        current_final_score = s.judge_score + s.poster_score + s.linter_score
 
-    penalty_multiplier = 1.0
-    # If the submission crosses soft deadline
-    # Check if the submission has crossed the hard deadline
-    # If yes, penalty_multiplier = 0
-    # Else, penality_multiplier = 1 - num_of_days * penalty
-    remaining_time = problem.contest.soft_end_datetime - s.timestamp
-    if s.timestamp > problem.contest.soft_end_datetime:
-        if s.timestamp > problem.contest.hard_end_datetime:
-            penalty_multiplier = 0.0
-        else:
-            penalty_multiplier += remaining_time.days * problem.contest.penalty
+        penalty_multiplier = 1.0
+        # If the submission crosses soft deadline
+        # Check if the submission has crossed the hard deadline
+        # If yes, penalty_multiplier = 0
+        # Else, penality_multiplier = 1 - num_of_days * penalty
+        remaining_time = problem.contest.soft_end_datetime - s.timestamp
+        if s.timestamp > problem.contest.soft_end_datetime:
+            if s.timestamp > problem.contest.hard_end_datetime:
+                penalty_multiplier = 0.0
+            else:
+                penalty_multiplier += remaining_time.days * problem.contest.penalty
 
-    # If num_of_days * penalty > 1.0, then the score is clamped to zero
-    s.final_score = max(0.0, current_final_score * penalty_multiplier)
-    s.save()
+        # If num_of_days * penalty > 1.0, then the score is clamped to zero
+        s.final_score = max(0.0, current_final_score * penalty_multiplier)
+        s.save()
 
-    ppf, _ = models.PersonProblemFinalScore.objects.get_or_create(person=s.participant,
-                                                                  problem=problem)
-    if ppf.score <= s.final_score:
-        # <= because otherwise when someone submits for the first time and scores 0
-        # (s)he will not show up in leaderboard
-        ppf.score = s.final_score
-        update_lb = True
-    ppf.save()
+        ppf, _ = models.PersonProblemFinalScore.objects.get_or_create(person=s.participant,
+                                                                    problem=problem)
+        if ppf.score <= s.final_score:
+            # <= because otherwise when someone submits for the first time and scores 0
+            # (s)he will not show up in leaderboard
+            ppf.score = s.final_score
+            update_lb = True
+        ppf.save()
 
-    if update_lb:
-        # Update the leaderboard only if the submission improved the final score
-        handler.update_leaderboard(problem.contest.pk, s.participant.email)
+        if update_lb:
+            # Update the leaderboard only if the submission improved the final score
+            handler.update_leaderboard(problem.contest.pk, s.participant.email)
+    except Exception as err:
+        print("Internal Error: Database object create/update failed")
 
     return True
 
@@ -172,7 +193,7 @@ out = 1
 while out != 0:
     print("Building Docker image: {}....".format(DOCKER_IMAGE_NAME))
     # Build docker image using docker run
-    out = call(['docker', 'build', '-t', DOCKER_IMAGE_NAME, './'])
+    out = call(['sudo', 'docker', 'build', '-t', DOCKER_IMAGE_NAME, './'])
     if out != 0:
         print("Build failed, retrying...")
 
@@ -198,17 +219,23 @@ if not os.path.exists(MONITOR_DIRECTORY):
 
 
 while True:
-    if len(LS) < REFRESH_LS_TRIGGER:
-        # Neglect .log files in tmp/; these are for error
-        # messages arising at any stage of the evaluation
-        sleep(SLEEP_DUR_BEFORE_REFRESH)
-        LS = [os.path.join(MONITOR_DIRECTORY, sub_file)
-              for sub_file in os.listdir(MONITOR_DIRECTORY) if sub_file[:-4] != '.log']
-        LS.sort(key=os.path.getctime)
+    try:
+        if len(LS) < REFRESH_LS_TRIGGER:
+            # Neglect .log files in tmp/; these are for error
+            # messages arising at any stage of the evaluation
+            sleep(SLEEP_DUR_BEFORE_REFRESH)
+            LS = [os.path.join(MONITOR_DIRECTORY, sub_file)
+                for sub_file in os.listdir(MONITOR_DIRECTORY) if sub_file[:-4] != '.log']
+            LS.sort(key=os.path.getctime)
+    except Exception as err:
+        print("Internal Error: Refresh trigger failed")
 
     if len(LS) > 0:
-        sub_file = LS[0]  # The first file submission-wise
-        sub_id = os.path.basename(sub_file)[8:-4]  # This is the submission ID
+        try:
+            sub_file = LS[0]  # The first file submission-wise
+            sub_id = os.path.basename(sub_file)[8:-4]  # This is the submission ID
+        except Exception as err:
+            print("Internal Error: Couldn't get sub file name")
 
         # Move to content
         cur_dir = os.getcwd()
@@ -216,11 +243,17 @@ while True:
 
         # Run docker image
         print("INFO: evaluating submission: {}".format(sub_id))
-        call(['docker', 'run', '--rm', '-v', '{}:/app'.format(os.getcwd()),
-              '-e', 'SUB_ID={}'.format(sub_id), DOCKER_IMAGE_NAME])
+        try:
+            call(['sudo', 'docker', 'run', '--rm', '-v', '{}:/app'.format(os.getcwd()),
+                '-e', 'SUB_ID={}'.format(sub_id), DOCKER_IMAGE_NAME])
+        except Exception as err:
+            print("Internal Error: Docker evaluation failed")
 
         # Come back to parent directory
         os.chdir(cur_dir)
 
         saver(sub_id)
-        LS.remove(sub_file)
+        try:
+            LS.remove(sub_file)
+        except Exception as err:
+            print("Internal Error: Remove sub file from list failed")
