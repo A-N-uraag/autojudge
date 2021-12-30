@@ -16,10 +16,18 @@ parser.add_argument('--submission_config', type=str,
                             ...""")
 args = parser.parse_args()
 
+def is_binary(fileName):
+    try:
+        with open(fileName) as check_file:  # try open file in text mode
+            check_file.read()
+            return False
+    except:  # if fail then file is non-text (binary)
+        return True
+
 with open(args.submission_config) as f:
     sub_info = [x[:-1] for x in f.readlines()]
 
-#print(sub_info)
+print(sub_info)
 
 # Retain the first 2 lines alone
 subprocess.call(['rm', args.submission_config])
@@ -29,14 +37,23 @@ with open(args.submission_config, "w") as stat_file:
 
 # Run clangjudge only for c/c++ submissions
 if (sub_info[2]==".c" or sub_info[2]==".cpp") and sub_info[3]:
-    try:
-        subprocess.check_output(['./judgeClangTool/clangjudge', sub_info[3],
+   
+    isFileBinary=is_binary('submissions/submission_{}{}'.format(sub_info[1], sub_info[2]))
+    #print(isFileBinary)
+
+    if(isFileBinary):
+        #print("binary found!")
+        pass
+    
+    else:
+        try:
+            subprocess.check_output(['./judgeClangTool/clangjudge', sub_info[3],
                                 'submissions/submission_{}{}'.format(sub_info[1], sub_info[2])])
-    except subprocess.CalledProcessError as e:
-        error_msg = str(e.output.decode('utf-8'))
-        clangtool_log_file = 'sub_clangjudge_{}.log'.format(sub_info[1])
-        with open('tmp/' + clangtool_log_file, "w") as log_file:
-            log_file.write(error_msg)
+        except subprocess.CalledProcessError as e:
+            error_msg = str(e.output.decode('utf-8'))
+            clangtool_log_file = 'sub_clangjudge_{}.log'.format(sub_info[1])
+            with open('tmp/' + clangtool_log_file, "w") as log_file:
+                log_file.write(error_msg)
 
 # First compile
 try:

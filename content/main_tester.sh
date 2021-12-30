@@ -62,49 +62,55 @@ run_submission() {
   
   #A flag to denote any limit was exceeded
   LIMITFLAG=0
+  TimeLimit=0
   
-  # First two lines specify the flags required
-  # -w /dev/null pipes output of the tool to /dev/null, --vsize-limit gives the virtual size limit
-  # --cores 0 limits to only one core,
-  # --var provides a file with specific flags which are used for checking
-  # The last line runs the process
-  timer_tool -w /dev/null --vsize-limit $MLIMIT --cores 0 \
+  
+  #Checking for TLE using timeout tool	  
+  timeout -s 15 $TLIMIT ${SUB_FDR}/submission_${SID} < ${TEST_FDR}/inputfile_${TID}.txt > ${TMP}/sub_output_${SID}_${TID}.txt 2> /dev/null
+    
+  #if the submission timed out
+  if [ "$?" = 124 ] ; then
+	 VERDICT=$(error_code_to_string $TLE ${TID})
+	 echo "Time limit exceeded" > ${TMP}/sub_run_${SID}_${TID}.log
+    	 TimeLimit=1
+	 LIMITFLAG=1
+  fi
+
+  
+  #If it is not a TLE checking for MLE
+  if [ "$TimeLimit" = 0 ] ; then
+	# First two lines specify the flags required
+  	# -w /dev/null pipes output of the tool to /dev/null, --vsize-limit gives the virtual size limit
+  	# --cores 0 limits to only one core,
+  	# --var provides a file with specific flags which are used for checking
+ 	 # The last line runs the process
+  	timer_tool -w /dev/null --vsize-limit $MLIMIT --cores 0 \
              --var ${TMP}/submission_status_${SID}_${TID}.txt \
              ${SUB_FDR}/submission_${SID} < ${TEST_FDR}/inputfile_${TID}.txt > ${TMP}/sub_output_${SID}_${TID}.txt 2> /dev/null
 
-  # Make all the flags as env vars for checking and remove this file
-  . ${TMP}/submission_status_${SID}_${TID}.txt
-  rm ${TMP}/submission_status_${SID}_${TID}.txt
+	# Make all the flags as env vars for checking and remove this file
+  	. ${TMP}/submission_status_${SID}_${TID}.txt
+  	rm ${TMP}/submission_status_${SID}_${TID}.txt
 
-  # This is what we do:
-  # - Run it with the timer_tool, and then check if the limits are maintained
-  #     - If no, return the appropriate errors
-  #     - If yes, re-run again to get the final submission output
-  #       This is then checked normally using a diff
-  #       The status is appended to the verdict_string along with the memory and time consumed
-  VERDICT=""
+  	# This is what we do:
+  	# - Run it with the timer_tool, and then check if the limits are maintained
+  	#     - If no, return the appropriate errors
+  	#     - If yes, re-run again to get the final submission output
+  	#       This is then checked normally using a diff
+  	#       The status is appended to the verdict_string along with the memory and time consumed
+  	VERDICT=""
 
-  #Checking if it is MLE 
-  if [ "$MEMOUT" = true ] ; then
-    VERDICT=$(error_code_to_string $OOM ${TID})
-    echo "Memory limit exceeded" > ${TMP}/sub_run_${SID}_${TID}.log
-    LIMITFLAG=1
-  
-  #If it is not a MLE checking for TLE
-  elif [ "$MEMOUT" = false ] ; then
-	
-    #Checking for TLE using timeout tool	  
-    timeout -s 15 $TLIMIT ${SUB_FDR}/submission_${SID} < ${TEST_FDR}/inputfile_${TID}.txt > ${TMP}/sub_output_${SID}_${TID}.txt 2> /dev/null
+  	#Checking if it is MLE 
+  	if [ "$MEMOUT" = true ] ; then
+    		VERDICT=$(error_code_to_string $OOM ${TID})
+    		echo "Memory limit exceeded" > ${TMP}/sub_run_${SID}_${TID}.log
+    		LIMITFLAG=1	
+	fi
     
-    #if the submission timed out
-    if [ "$?" = 124 ] ; then
-	    VERDICT=$(error_code_to_string $TLE ${TID})
-	    echo "Time limit exceeded" > ${TMP}/sub_run_${SID}_${TID}.log
-    	    LIMITFLAG=1
-    fi
-
   fi
-  
+ 
+      
+    
   #If no limit was exceeded normal flow resumes
   if [ "$LIMITFLAG" = 0 ] ; then
     clean_generated_output ${SID} ${TID}  # Delete the generated file to prevent any mismatch
@@ -127,7 +133,11 @@ run_submission() {
   fi
 
 
-  VERDICT="${VERDICT} ${WCTIME} ${MAXVM} sub_run_${SID}_${TID}.log"
+  if [ "$TimeLimit" = 1 ] ; then
+	VERDICT="${VERDICT} 0 0 sub_run_${SID}_${TID}.log"
+  else
+  	VERDICT="${VERDICT} ${WCTIME} ${MAXVM} sub_run_${SID}_${TID}.log"
+  fi
   echo ${VERDICT}
 }
 
