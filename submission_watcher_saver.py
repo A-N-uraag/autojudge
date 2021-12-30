@@ -38,6 +38,9 @@ def _compute_lint_score(report):
 
 def saver(sub_id):
     update_lb = False
+    if not os.path.exists(os.path.join(MONITOR_DIRECTORY, 'sub_run_' + sub_id + '.txt')):
+        print("Internal Error: Can't find sub run txt file")
+        return True
     # Based on the result populate SubmsissionTestCase table and return the result
     with open(os.path.join(MONITOR_DIRECTORY, 'sub_run_' + sub_id + '.txt'), 'r') as f:
         # Assumed format to sub_run_ID.txt file
@@ -68,10 +71,12 @@ def saver(sub_id):
                 msg.append("Output has invalid text")
                 verdict.pop()
                 verdict.append('RE')
+                print("Error: can't read log file")
+                print(sub_id)
             try:
                 os.remove(os.path.join(MONITOR_DIRECTORY, sep[4]))  # Remove after reading
             except Exception as err:
-                print("Internal error: can't remove sub log file")
+                print("Internal Error: can't remove sub log file")
 
     try:
         # Delete the file after reading
@@ -114,9 +119,6 @@ def saver(sub_id):
                 clang_tool_msg="Tool Error:Compilation Failed.\nSee below for details why compilation failed"
                 s.clang_tool_msg=clang_tool_msg
 
-            if clang_tool_msg and verdict[i]!='CE':
-                verdict[i] = 'F'
-
             if verdict[i] == 'P':
                 score_received += max_score
             st = models.SubmissionTestCase.objects.get(submission=submission,
@@ -136,6 +138,8 @@ def saver(sub_id):
                         st.message = msg[i].splitlines()[-1]
                     else:
                         st.message = st.msgfull
+            else:
+                st.message = msg[i]
             
             st.save()
             
@@ -193,7 +197,7 @@ out = 1
 while out != 0:
     print("Building Docker image: {}....".format(DOCKER_IMAGE_NAME))
     # Build docker image using docker run
-    out = call(['sudo', 'docker', 'build', '-t', DOCKER_IMAGE_NAME, './'])
+    out = call(['docker', 'build', '-t', DOCKER_IMAGE_NAME, './'])
     if out != 0:
         print("Build failed, retrying...")
 
@@ -244,7 +248,7 @@ while True:
         # Run docker image
         print("INFO: evaluating submission: {}".format(sub_id))
         try:
-            call(['sudo', 'docker', 'run', '--rm', '-v', '{}:/app'.format(os.getcwd()),
+            call(['docker', 'run', '--rm', '-v', '{}:/app'.format(os.getcwd()),
                 '-e', 'SUB_ID={}'.format(sub_id), DOCKER_IMAGE_NAME])
         except Exception as err:
             print("Internal Error: Docker evaluation failed")

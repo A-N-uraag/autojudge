@@ -229,8 +229,8 @@
                                                 <b>Message:</b><br>
                                                 <textarea class="form-control" disabled style="height:500px;font-weight:bold;">{{ res.6 }}</textarea>
                                             </p>
-                                            {% elif clangtool_passed or res.0 == "Compilation Error" %}
-                                            {% if res.0 != "Passed" and res.0 != "Failed" or res.3 %}
+                                            {% else %}
+                                            {% if res.0 != "Passed" and res.0 != "Failed" or res.3 or not clangtool_passed %}
                                             <p>
                                                 <b>Message:</b><br>
                                                 <textarea class="form-control" disabled style="height:500px;font-weight:bold;">{{ res.5 }}</textarea>
