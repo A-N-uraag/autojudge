@@ -73,16 +73,14 @@ public:
   }
 
   bool VisitCallExpr(CallExpr *cl) {
-    // Only function definitions (with bodies), not declarations.
     auto FuncDecl = cl->getDirectCallee();
     if(StringAllChecks){
      for (int i = 0; i < strFunlength; i++) {
 	if (FuncDecl && FuncDecl->getNameInfo().getAsString() == strFuncs[i]) {
-        // if (Context->getSourceManager().isInMainFile(f->getLocation()))
-        // llvm::outs() << f->getNameInfo().getAsString() << "\n";
-         if (Context->getSourceManager().isInSystemHeader(FuncDecl->getLocation()))
-          // llvm::outs() << FuncDecl->getNameInfo().getAsString() << "\n";
+       	   if (Context->getSourceManager().isInSystemHeader(FuncDecl->getLocation())){
+             llvm::outs() << FuncDecl->getNameInfo().getAsString() << "\n";
              printMsg(cl,strFuncs[i],StringFailType);
+	   }
         }
       }
     }
@@ -106,9 +104,10 @@ public:
     }
     if(SystemAllChecks){
      for (int i = 0; i < sysFunlength; i++) {
-         if (FuncDecl && FuncDecl->getNameInfo().getAsString() == sysFuncs[i]) {
-           if (Context->getSourceManager().isInSystemHeader(FuncDecl->getLocation()))
-               printMsg(cl,sysFuncs[i],SysFailType);
+        if (FuncDecl && FuncDecl->getNameInfo().getAsString() == sysFuncs[i]) {
+	   if (Context->getSourceManager().isInSystemHeader(FuncDecl->getLocation()) || FuncDecl->isImplicit()){
+	       printMsg(cl,sysFuncs[i],SysFailType);
+	   }
          }
        }
      }
