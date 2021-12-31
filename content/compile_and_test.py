@@ -63,7 +63,10 @@ try:
                              'submission_{}{}'.format(sub_info[1], sub_info[2])],
                             stderr=subprocess.STDOUT)
 except subprocess.CalledProcessError as e:  # If compilation fails, end this script here
-    error_msg = str(e.output.decode('utf-8'))
+    if isFileBinary:
+        error_msg = "Submitted file has invalid format."
+    else:
+        error_msg = str(e.output.decode('utf-8'))
     with open(args.submission_config, "a") as stat_file:
         for testcase_id in sub_info[6:]:
             log_file_name = 'sub_run_{}_{}.log'.format(sub_info[1], testcase_id)

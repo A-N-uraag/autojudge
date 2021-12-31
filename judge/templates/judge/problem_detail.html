@@ -78,7 +78,8 @@
     statementQuill.disable()
     inputFormatQuill.disable()
     outputFormatQuill.disable()
-
+</script>
+<script>
     $(document).ready(function () {
         $(".custom-file-input").on("change", function () {
             var fileName = $(this).val().split("\\").pop();
@@ -143,14 +144,14 @@
         </div>
         {% endif %}
     </div>
-    {% if type == 'Poster' %}
+    {% if type == 'Poster' and curr_time > problem.contest.start_datetime and curr_time < problem.contest.hard_end_datetime %}
     <div class="modal fade" id="modal-close-problem" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal- modal-dialog-centered modal-sm" role="document">
             <div class="modal-content">
                 <div class="modal-body p-0">
                     <div class="card bg-secondary shadow border-0">
                         <div class="card-body px-lg-5 py-lg-5">
-                            <div class="text-center text-muted mb-4">Update {{ index_string }}</div>
+                            <div class="text-center text-muted mb-4">Close Submissions</div>
                             <form method="POST" role="form">
                                 {% if form.non_field_errors %}
                                 {% for nfe in form.non_field_errors %}
