@@ -45,7 +45,7 @@ def update_index_string(index_str: str, index_str_plural: str) -> Tuple[bool, Va
 
 
 def process_contest(contest_name: str, contest_start: datetime, contest_soft_end: datetime,
-                    contest_hard_end: datetime, penalty: float, submission_limit: int,
+                    contest_hard_end: datetime, penalty: float,
                     is_public: bool,
                     enable_leaderboard: bool,
                     enable_linter_score: bool,
@@ -58,8 +58,6 @@ def process_contest(contest_name: str, contest_start: datetime, contest_soft_end
     :param contest_soft_end: A `datetime` object representing the soft deadline of the contest
     :param contest_hard_end: A `datetime` object representing the hard deadline of the contest
     :param penalty: A penalty score for late submissions
-    :param submission_limit: Integer representing maximum number of submissions allowed
-                             for each participant
     :param is_public: Field to indicate if the contest is public (or private)
     :param enable_leaderboard: Field to indicate if leaderboard is to be maintained
     :param enable_linter_score: Field to indicate if linter scoring is enabled in the contest
@@ -78,7 +76,6 @@ def process_contest(contest_name: str, contest_start: datetime, contest_soft_end
                                                     soft_end_datetime=contest_soft_end,
                                                     hard_end_datetime=contest_hard_end,
                                                     penalty=penalty,
-                                                    submission_limit=submission_limit,
                                                     public=is_public,
                                                     enable_leaderboard=enable_leaderboard,
                                                     enable_linter_score=enable_linter_score,
@@ -153,6 +150,8 @@ def process_problem(contest_id: int,
     :type statement: int
     :param memory_limit: Problem virtual memory limit
     :type statement: int
+    :param submission_limit: Integer representing maximum number of submissions allowed
+                             for each participant
     :param file_exts: Accepted file format for submissions
     :type statement: str
     :param clang_checks: Placeholder clang checks

@@ -70,9 +70,6 @@ class Contest(models.Model):
     penalty = models.FloatField(default=0.0)
     """Penalty for late-submission"""
 
-    submission_limit = models.PositiveSmallIntegerField(default=1000)
-    """Maximum number of submissions allowed for each participant"""
-
     public = models.BooleanField(default=False)
     """Is the contest public?"""
 
@@ -128,6 +125,9 @@ class Problem(models.Model):
     memory_limit = models.PositiveIntegerField(default=200000)
     """Problem memory limit"""
 
+    submission_limit = models.PositiveSmallIntegerField(default=1000)
+    """Maximum number of submissions allowed for each participant"""
+
     # Support upto 30 file formats
     file_exts = models.CharField(max_length=100, default='.py,.cpp')
     """Accepted file extensions for submissions to problem"""
@@ -152,6 +152,9 @@ class Problem(models.Model):
                           is_compilation=False),
         default='./default/test_script.sh')
     """Problem test script"""
+
+    is_closed = models.BooleanField(default=False)
+    """Close Problem Submissions"""
 
     def __str__(self):
         return self.code

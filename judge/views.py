@@ -13,7 +13,8 @@ from . import handler
 from .models import Contest, Problem, TestCase, Submission
 from .forms import IndexStringForm
 from .forms import NewContestForm, AddPersonToContestForm, DeletePersonFromContestForm
-from .forms import NewProblemForm, EditProblemForm, NewSubmissionForm, AddTestCaseForm
+from .forms import NewProblemForm, EditProblemForm, CloseProblemForm
+from .forms import NewSubmissionForm, AddTestCaseForm
 from .forms import NewCommentForm, UpdateContestForm, AddPosterScoreForm
 
 
@@ -399,7 +400,7 @@ def delete_problem(request, problem_id):
     contest_id = problem.contest.pk
     perm = handler.get_personproblem_permission(
         None if user is None else user.email, problem_id)
-    if timezone.now() > problem.contest.start_datetime:
+    if not problem.is_closed and timezone.now() > problem.contest.start_datetime:
         return handler404(request)
     if perm and request.method == 'POST':
         status, _ = handler.delete_problem(problem_id)
@@ -464,7 +465,8 @@ def problem_detail(request, problem_id):
         pass
     elif perm is False and user.is_authenticated:
         user_submission_num = len(Submission.objects.filter(problem=problem_id,participant=user.email))+1
-        if (user_submission_num <= problem.contest.submission_limit and
+        if (user_submission_num <= problem.submission_limit and
+            not problem.is_closed and
             timezone.now() < problem.contest.hard_end_datetime):
             status, file_exts_or_error = handler.get_problem_file_exts(problem_id)
             if status:
@@ -495,6 +497,20 @@ def problem_detail(request, problem_id):
                         form.add_error(None, maybe_error)
             else:
                 form = AddTestCaseForm()
+        elif (timezone.now() > problem.contest.start_datetime and
+            timezone.now() < problem.contest.hard_end_datetime):
+            if request.method == 'POST':
+                form = CloseProblemForm(request.POST)
+                if form.is_valid():
+                    try:
+                        problem.is_closed = form.cleaned_data['is_closed']
+                        problem.save()
+                    except Exception as e:
+                        form.add_error(None, str(e))
+            else:
+                form = CloseProblemForm(initial={
+                    'is_closed': problem.is_closed,
+                })
         else:
             form = None
         context['form'] = form

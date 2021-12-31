@@ -66,7 +66,7 @@ class HandlerTests(TestCase):
                                              contest_start='2019-04-25T12:30',
                                              contest_soft_end='2019-04-26T12:30',
                                              contest_hard_end='2019-04-27T12:30',
-                                             penalty=0, submission_limit=1000, is_public=True,
+                                             penalty=0, is_public=True,
                                              enable_linter_score=True,
                                              enable_leaderboard=True, enable_poster_score=True)
         self.assertTrue(status)
@@ -79,7 +79,6 @@ class HandlerTests(TestCase):
         self.assertEqual(c.soft_end_datetime, datetime(2019, 4, 26, 7, 0, tzinfo=timezone.utc))
         self.assertEqual(c.hard_end_datetime, datetime(2019, 4, 27, 7, 0, tzinfo=timezone.utc))
         self.assertEqual(c.penalty, 0)
-        self.assertEqual(c.submission_limit, 1000)
         self.assertTrue(c.public)
         self.assertTrue(c.enable_leaderboard)
         status, err = handler.delete_contest(contest_id=int(pk))
@@ -98,8 +97,8 @@ class HandlerTests(TestCase):
             statement='Test Problem Statement',
             input_format='Test input format',
             output_format='Test output format', difficulty=5,
-            time_limit=timedelta(seconds=10),
-            memory_limit=10000, file_exts='.py', starting_code=None,
+            time_limit=timedelta(seconds=10), memory_limit=10000,
+            submission_limit=1000, file_exts='.py', starting_code=None,
             max_score=4, compilation_script=None, test_script=None)
         self.assertTrue(status)
         self.assertIsNone(msg)
@@ -114,6 +113,7 @@ class HandlerTests(TestCase):
         self.assertEqual(p.difficulty, 5)
         self.assertEqual(p.time_limit, timedelta(seconds=10))
         self.assertEqual(p.memory_limit, 10000)
+        self.assertEqual(p.submission_limit, 1000)
         self.assertEqual(p.file_exts, '.py')
         self.assertEqual(p.max_score, 4)
         status, msg = handler.update_problem(code=p.code, name='Updated Test Problem 1',
