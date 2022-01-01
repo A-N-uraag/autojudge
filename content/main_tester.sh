@@ -150,7 +150,10 @@ run_submission() {
     
     case "$?" in
       "0")
-          echo "" >> ${TMP}/sub_output_${SID}_${TID}.txt
+          fileSize=$(wc -c < "${TMP}/sub_output_${SID}_${TID}.txt")
+          if [ "$fileSize" -le 1 ] ; then
+            echo -n " " >> ${TMP}/sub_output_${SID}_${TID}.txt
+          fi
           if ! file --mime -b ${TMP}/sub_output_${SID}_${TID}.txt | grep -i -q "ascii" ; then  # checking for ASCII output file
             echo "Output has invalid text" > ${TMP}/sub_run_${SID}_${TID}.log
             VERDICT=$(error_code_to_string $RE ${TID})
