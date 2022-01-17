@@ -73,6 +73,9 @@ class Contest(models.Model):
     public = models.BooleanField(default=False)
     """Is the contest public?"""
 
+    enable_evaluation = models.BooleanField(default=True)
+    """Enable submission evaluation"""
+
     enable_leaderboard = models.BooleanField(default=True)
     """Enable leaderboard"""
 

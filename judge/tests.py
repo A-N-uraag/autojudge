@@ -68,6 +68,7 @@ class HandlerTests(TestCase):
                                              contest_hard_end='2019-04-27T12:30',
                                              penalty=0, is_public=True,
                                              enable_linter_score=True,
+                                             enable_evaluation=True,
                                              enable_leaderboard=True, enable_poster_score=True)
         self.assertTrue(status)
         c = models.Contest.objects.filter(pk=int(pk))
@@ -80,6 +81,7 @@ class HandlerTests(TestCase):
         self.assertEqual(c.hard_end_datetime, datetime(2019, 4, 27, 7, 0, tzinfo=timezone.utc))
         self.assertEqual(c.penalty, 0)
         self.assertTrue(c.public)
+        self.assertTrue(c.enable_evaluation)
         self.assertTrue(c.enable_leaderboard)
         status, err = handler.delete_contest(contest_id=int(pk))
         self.assertTrue(status)

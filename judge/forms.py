@@ -99,6 +99,11 @@ class NewContestForm(forms.Form):
     is_public = forms.BooleanField(label='Is this contest public?', required=False)
     """Contest is_public property"""
 
+    enable_evaluation = forms.BooleanField(label='Enable evaluations for submissions',
+                                             required=False,
+                                             initial=True)
+    """Contest enable_evaluation property"""
+
     enable_leaderboard = forms.BooleanField(label='Enable leaderboard', required=False,
                                              initial=True)
     """Contest enable_leaderboard property"""

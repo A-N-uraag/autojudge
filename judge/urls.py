@@ -48,7 +48,7 @@ urlpatterns = [
          views.edit_problem, name='edit_problem'),
     path('problem/<str:problem_id>/submissions/',
          views.problem_submissions, name='problem_submissions'),
-    path('submission/<str:problem_id>/downloadlatest/',
+    path('submission/<str:problem_id>/downloadlatest/<int:get_failed>/',
          views.all_submissions_download, name='all_submissions_download'),
 
     # Submission-specific paths
