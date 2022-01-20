@@ -83,16 +83,19 @@ run_submission() {
   # -w /dev/null pipes output of the tool to /dev/null, --vsize-limit gives the virtual size limit
   # --cores 0 limits to only one core,
   # --var provides a file with specific flags which are used for checking
+  # Can use --input, -o flags instead of redirection
   # The last line runs the process
   timeout -s 15 $TLIMIT timer_tool -w /dev/null --vsize-limit $MLIMIT --cores 0 \
              --var ${TMP}/submission_status_${SID}_${TID}.txt \
-             ${SUB_FDR}/submission_${SID} < ${TEST_FDR}/inputfile_${TID}.txt > ${TMP}/sub_output_${SID}_${TID}.txt 2> /dev/null & #Run this in background
+             ${SUB_FDR}/submission_${SID} < ${TEST_FDR}/inputfile_${TID}.txt > ${TMP}/sub_output_${SID}_${TID}.txt 2> ${TMP}/sub_run_${SID}_${TID}.log & #Run this in background
   
   limit_proc_id=$! #Getting PID of background process
   
   wasNotFound=0 #Setting flag to poll background process
 
   #Polling background process
+  #Can use --output-limit flag of timer_tool
+  #But this is faster as it terminates as soon as size limit is reached
   while [ "$wasNotFound" != 1 ] 
   do
 	  ps | grep -q "$limit_proc_id"
@@ -145,10 +148,7 @@ run_submission() {
     
   #If no limit was exceeded normal flow resumes
   if [ "$LIMITFLAG" = 0 ] ; then
-    clean_generated_output ${SID} ${TID}  # Delete the generated file to prevent any mismatch
-    ${SUB_FDR}/submission_${SID} < ${TEST_FDR}/inputfile_${TID}.txt > ${TMP}/sub_output_${SID}_${TID}.txt 2> ${TMP}/sub_run_${SID}_${TID}.log
-    
-    case "$?" in
+    case "$EXITSTATUS" in
       "0")
           fileSize=$(wc -c < "${TMP}/sub_output_${SID}_${TID}.txt")
           if [ "$fileSize" -le 1 ] ; then
@@ -163,7 +163,7 @@ run_submission() {
           fi
           ;;
       *)
-          echo "\nExit code: $?" >> ${TMP}/sub_run_${SID}_${TID}.log
+          echo "\nExit code: $EXITSTATUS" >> ${TMP}/sub_run_${SID}_${TID}.log
           VERDICT=$(error_code_to_string $RE ${TID})
           ;;
     esac

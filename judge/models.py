@@ -211,6 +211,9 @@ class Submission(models.Model):
     timestamp = models.DateTimeField()
     """Timestamp of submission"""
 
+    verdict_type = models.TextField(default='')
+    """Categorize verdicts into verdict_type for a submission"""
+
     clang_tool_msg = models.TextField(default='')
     """Message placeholder, used for displaying clang tool output"""
 

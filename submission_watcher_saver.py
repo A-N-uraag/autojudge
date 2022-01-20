@@ -41,17 +41,35 @@ def saver(sub_id):
     if not os.path.exists(os.path.join(MONITOR_DIRECTORY, 'sub_run_' + sub_id + '.txt')):
         print("Internal Error: Can't find sub run txt file")
         return True
+
+    clang_tool_msg=""
+    try:
+        #Checking if any tool output exists or not
+        if os.path.isfile(os.path.join(MONITOR_DIRECTORY,  'sub_clangjudge_'+sub_id+'.log')):
+            #If so copy output to variable
+            with open(os.path.join(MONITOR_DIRECTORY, 'sub_clangjudge_'+sub_id+'.log'),'r',encoding='utf-8') as f:
+                clang_tool_msg=str(f.read())
+
+            #Remove file after copying output
+            os.remove(os.path.join(MONITOR_DIRECTORY,'sub_clangjudge_'+sub_id+'.log'))
+
+        #TODO:Handle displaying of errors when clang tool runs into a general compilation error [ should be displayed normally as error for submission ]
+    except:
+        print("Internal error: Clang tool log error")
+
     # Based on the result populate SubmsissionTestCase table and return the result
     with open(os.path.join(MONITOR_DIRECTORY, 'sub_run_' + sub_id + '.txt'), 'r') as f:
         # Assumed format to sub_run_ID.txt file
         # PROBLEM_CODE
         # SUBMISSION_ID
         # TESTCASEID VERDICT TIME MEMORY MESSAGE
+        # TESTCASEID (If first VERDICT = CE)
         # Read the output into verdict, memory and time.
         try:
             lines = [line[:-1] for line in f.readlines()]
             problem = lines[0]
             submission = lines[1]
+            skip_ce = 0
             testcase_id, verdict, time, memory, msg = [], [], [], [], []
         except Exception as err:
             print("Internal Error: Can't read sub txt file")
@@ -59,49 +77,35 @@ def saver(sub_id):
             try:
                 sep = line.split(' ', maxsplit=4)
                 testcase_id.append(sep[0])
-                verdict.append(sep[1])
-                time.append(sep[2])
-                memory.append(sep[3])
+                if not skip_ce:
+                    verdict.append(sep[1])
+                    time.append(sep[2])
+                    memory.append(sep[3])
             except Exception as err:
                 print("Internal Error: Can't split sub txt string")
-            try:
-                with open(os.path.join(MONITOR_DIRECTORY, sep[4])) as log_file:
-                    msg.append(str(log_file.read()))
-            except Exception as err:
-                msg.append("Output has invalid text")
-                verdict.pop()
-                verdict.append('RE')
-                print("Error: can't read log file")
-                print(sub_id)
-            try:
-                os.remove(os.path.join(MONITOR_DIRECTORY, sep[4]))  # Remove after reading
-            except Exception as err:
-                print("Internal Error: can't remove sub log file")
+            if not skip_ce:
+                try:
+                    with open(os.path.join(MONITOR_DIRECTORY, sep[4])) as log_file:
+                        msg.append(str(log_file.read()))
+                except Exception as err:
+                    msg.append("Output has invalid text")
+                    verdict.pop()
+                    verdict.append('RE')
+                    print("Error: can't read log file")
+                    print(sub_id)
+                try:
+                    os.remove(os.path.join(MONITOR_DIRECTORY, sep[4]))  # Remove after reading
+                except Exception as err:
+                    print("Internal Error: can't remove sub log file")
+                # If compilation error or clang checks failed
+                if len(sep[1]) > 2 or clang_tool_msg:
+                    skip_ce = 1
 
     try:
         # Delete the file after reading
         os.remove(os.path.join(MONITOR_DIRECTORY, 'sub_run_' + sub_id + '.txt'))
     except Exception as err:
         print("Internal error: can't remove sub txt file")
-    
-    clang_tool_msg=""
-
-    try:
-        #Checking if any tool output exists or not 
-        if os.path.isfile(os.path.join(MONITOR_DIRECTORY,  'sub_clangjudge_'+sub_id+'.log')):
-            #If so copy output to variable
-            with open(os.path.join(MONITOR_DIRECTORY, 'sub_clangjudge_'+sub_id+'.log'),'r',encoding='utf-8') as f:
-                clang_tool_msg=str(f.read())
-            
-            #Remove file after copying output
-            os.remove(os.path.join(MONITOR_DIRECTORY,'sub_clangjudge_'+sub_id+'.log'))
-
-            #Priting to see if output is correct or not
-            #print(clang_tool_msg)
-
-        #TODO:Handle displaying of errors when clang tool runs into a general compilation error [ should be displayed normally as error for submission ]
-    except:
-        print("Internal error: Clang tool log error")
 
     try:
         problem = models.Problem.objects.get(pk=problem)
@@ -111,23 +115,34 @@ def saver(sub_id):
 
         score_received = 0
         max_score = problem.max_score 
+        correct_count = 0
+
+        #If compilation fails then output error as normal error for test case
+        if verdict[0] == 'CE0' or verdict[0] == 'CE1':
+            clang_tool_msg="Tool Error:Compilation Failed.\nSee below for details why compilation failed"
+            s.clang_tool_msg=clang_tool_msg
+            s.verdict_type = verdict[0]
+            verdict[0] = 'CE'
+        elif verdict[0] == 'CE2':
+            s.verdict_type = verdict[0]
+            verdict[0] = 'F'
 
         for i in range(len(testcase_id)):
-            
-            #If compilation fails then output error as normal error for test case
-            if verdict[i]=='CE':
-                clang_tool_msg="Tool Error:Compilation Failed.\nSee below for details why compilation failed"
-                s.clang_tool_msg=clang_tool_msg
-
-            if verdict[i] == 'P':
-                score_received += max_score
             st = models.SubmissionTestCase.objects.get(submission=submission,
-                                                    testcase=testcase_id[i])
-            st.verdict = verdict[i]
-            st.memory_taken = int(memory[i])
-            st.time_taken = timedelta(seconds=float(time[i]))
-            if not clang_tool_msg or verdict[i]=='CE':
+                                                       testcase=testcase_id[i])
+            if clang_tool_msg:
+                st.verdict = verdict[0]
+                st.memory_taken = int(memory[0])
+                st.time_taken = timedelta(seconds=float(time[0]))
+                st.message = msg[0]
+            else:
+                st.verdict = verdict[i]
+                st.memory_taken = int(memory[i])
+                st.time_taken = timedelta(seconds=float(time[i]))
                 if verdict[i] == 'F' or verdict[i] == 'P':
+                    if verdict[i] == 'P':
+                        score_received += max_score
+                        correct_count += 1
                     with open(os.path.join(OUTPUT_DIRECTORY, 'outputfile_' + testcase_id[i] + '.txt'),'r') as f:
                         st.msgfull = "Expected output:\n"+str(f.read())+"\nOutput:\n"+msg[i]
                         if models.TestCase.objects.get(pk=testcase_id[i]).public:
@@ -138,11 +153,15 @@ def saver(sub_id):
                         st.message = msg[i].splitlines()[-1]
                     else:
                         st.message = st.msgfull
-            else:
-                st.message = msg[i]
-            
+
             st.save()
-            
+
+        if not s.verdict_type:
+            if correct_count == len(testcase_id):
+                s.verdict_type = '0'
+            else:
+                s.verdict_type = 'RE0'
+
         s.judge_score = score_received
 
         if s.problem.contest.enable_linter_score:

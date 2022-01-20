@@ -56,37 +56,40 @@ if (sub_info[2]==".c" or sub_info[2]==".cpp") and sub_info[3]:
             with open('tmp/' + clangtool_log_file, "w") as log_file:
                 log_file.write(error_msg)
             clangjudge_flag = 1
+            with open(args.submission_config, "a") as stat_file:
+                log_file_name = 'sub_run_{}_{}.log'.format(sub_info[1], sub_info[6])
+
+                with open('tmp/' + log_file_name, "w") as log_file:
+                    log_file.write("Clang Checks failed. Program uses function that is not allowed.")
+
+                stat_file.write("{} {} 0 0 {}\n".format(sub_info[6], 'CE2', log_file_name))
+                for testcase_id in sub_info[7:]:
+                    stat_file.write("{}\n".format(testcase_id))
 
 # First compile
-try:
-    subprocess.check_output(['./main_compiler.sh', sub_info[0],
-                             'submission_{}{}'.format(sub_info[1], sub_info[2])],
-                            stderr=subprocess.STDOUT)
-except subprocess.CalledProcessError as e:  # If compilation fails, end this script here
-    if isFileBinary:
-        error_msg = "Submitted file has invalid format."
-    else:
-        error_msg = str(e.output.decode('utf-8'))
-    with open(args.submission_config, "a") as stat_file:
-        for testcase_id in sub_info[6:]:
-            log_file_name = 'sub_run_{}_{}.log'.format(sub_info[1], testcase_id)
+if clangjudge_flag == 0:
+    try:
+        subprocess.check_output(['./main_compiler.sh', sub_info[0],
+                                'submission_{}{}'.format(sub_info[1], sub_info[2])],
+                                stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError as e:  # If compilation fails, end this script here
+        if isFileBinary or e.returncode == 2:
+            error_msg = "Submitted file has invalid format."
+            verdict_type = 'CE1'
+        else:
+            error_msg = str(e.output.decode('utf-8'))
+            verdict_type = 'CE0'
+
+        with open(args.submission_config, "a") as stat_file:
+            log_file_name = 'sub_run_{}_{}.log'.format(sub_info[1], sub_info[6])
 
             with open('tmp/' + log_file_name, "w") as log_file:
                 log_file.write(error_msg)
 
             stat_file.write("{} {} 0 0 {}\n"
-                            .format(testcase_id,
-                                    'CE' if e.returncode == 1 else 'NA', log_file_name))
-else:
-    if clangjudge_flag == 0:
-        subprocess.call(['./main_tester.sh'] + sub_info[0:2] + sub_info[4:])  # run tests
+                            .format(sub_info[6], verdict_type, log_file_name))
+            for testcase_id in sub_info[7:]:
+                stat_file.write("{}\n".format(testcase_id))
     else:
-        with open(args.submission_config, "a") as stat_file:
-            for testcase_id in sub_info[6:]:
-                log_file_name = 'sub_run_{}_{}.log'.format(sub_info[1], testcase_id)
-
-                with open('tmp/' + log_file_name, "w") as log_file:
-                    log_file.write("Clang Checks failed. Program uses function that is not allowed.")
-
-                stat_file.write("{} {} 0 0 {}\n".format(testcase_id, 'F', log_file_name))
-    subprocess.call(['rm', 'submissions/submission_{}'.format(sub_info[1])])  # remove executable
+        subprocess.call(['./main_tester.sh'] + sub_info[0:2] + sub_info[4:])  # run tests
+        subprocess.call(['rm', 'submissions/submission_{}'.format(sub_info[1])])  # remove executable

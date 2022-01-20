@@ -768,6 +768,14 @@ def all_submissions_download(request, problem_id: str, get_failed: bool):
     user = _get_user(request)
     all_participants = Submission.objects.filter(problem=problem_id).values_list('participant').distinct()
     zip_subdir = problem_id
+    if get_failed:
+        zip_subdir += "-failed"
+    dir_dict = {'CE0': os.path.join(zip_subdir, 'compilation_errs'),
+                'CE1': os.path.join(zip_subdir, 'unknown_format'),
+                'CE2': os.path.join(zip_subdir, 'checks_failed'),
+                'RE0': os.path.join(zip_subdir, 'runtime_errs'),
+                '0': os.path.join(zip_subdir, 'passed'),
+                '': os.path.join(zip_subdir, 'not_evaluated')}
     zip_filename = "{}.zip".format(zip_subdir)
 
     s = BytesIO()
@@ -784,12 +792,12 @@ def all_submissions_download(request, problem_id: str, get_failed: bool):
             if ((get_failed and submission.clang_tool_msg) or
                 not (get_failed or submission.clang_tool_msg)):
                 filedir, filename = os.path.split(filepath)
-                zip_path = os.path.join(zip_subdir, filename)
+                zip_path = os.path.join(dir_dict[submission.verdict_type], filename)
                 zf.write(filepath, zip_path)
         else:
             return handler404(request)
     zf.close()
-    return _return_zip_as_response(s.getvalue(),zip_filename)
+    return _return_zip_as_response(s.getvalue(), zip_filename)
 
 
 
