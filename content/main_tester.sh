@@ -62,61 +62,108 @@ run_submission() {
   
   #A flag to denote any limit was exceeded
   LIMITFLAG=0
+  TimeLimit=0
+  fileSizePanic=0
+  VERDICT=""
   
-  # First two lines specify the flags required
-  # -w /dev/null pipes output of the tool to /dev/null, --vsize-limit gives the virtual size limit
-  # --cores 0 limits to only one core,
-  # --var provides a file with specific flags which are used for checking
-  # The last line runs the process
-  timer_tool -w /dev/null --vsize-limit $MLIMIT --cores 0 \
-             --var ${TMP}/submission_status_${SID}_${TID}.txt \
-             ${SUB_FDR}/submission_${SID} < ${TEST_FDR}/inputfile_${TID}.txt > ${TMP}/sub_output_${SID}_${TID}.txt 2> /dev/null
-
-  # Make all the flags as env vars for checking and remove this file
-  . ${TMP}/submission_status_${SID}_${TID}.txt
-  rm ${TMP}/submission_status_${SID}_${TID}.txt
-
   # This is what we do:
-  # - Run it with the timer_tool, and then check if the limits are maintained
+  # - Run the timer_tool wrapped with the timeout tool, and then we send this process in the background
+  #	- We poll the background process to check if it is alive while doing so we also check the output file size
+  #     - If output file size exceeds limit [> 100KB for now] kill process and we show appropriate message
+  # 	- if file size is not exceeding we follow with timeout and memout checks
   #     - If no, return the appropriate errors
   #     - If yes, re-run again to get the final submission output
   #       This is then checked normally using a diff
   #       The status is appended to the verdict_string along with the memory and time consumed
-  VERDICT=""
 
-  #Checking if it is MLE 
-  if [ "$MEMOUT" = true ] ; then
-    VERDICT=$(error_code_to_string $OOM ${TID})
-    echo "Memory limit exceeded" > ${TMP}/sub_run_${SID}_${TID}.log
-    LIMITFLAG=1
+
   
-  #If it is not a MLE checking for TLE
-  elif [ "$MEMOUT" = false ] ; then
-	
-    #Checking for TLE using timeout tool	  
-    timeout -s 15 $TLIMIT ${SUB_FDR}/submission_${SID} < ${TEST_FDR}/inputfile_${TID}.txt > ${TMP}/sub_output_${SID}_${TID}.txt 2> /dev/null
+  # Wrapping timer_tool(runsolver) with timeout tool as timeout tool support seconds below 0(0.001s) 
+  # For runsolver first two lines specify the flags required
+  # -w /dev/null pipes output of the tool to /dev/null, --vsize-limit gives the virtual size limit
+  # --cores 0 limits to only one core,
+  # --var provides a file with specific flags which are used for checking
+  # Can use --input, -o flags instead of redirection
+  # The last line runs the process
+  timeout -s 15 $TLIMIT timer_tool -w /dev/null --vsize-limit $MLIMIT --cores 0 \
+             --var ${TMP}/submission_status_${SID}_${TID}.txt \
+             ${SUB_FDR}/submission_${SID} < ${TEST_FDR}/inputfile_${TID}.txt > ${TMP}/sub_output_${SID}_${TID}.txt 2> ${TMP}/sub_run_${SID}_${TID}.log & #Run this in background
+  
+  limit_proc_id=$! #Getting PID of background process
+  
+  wasNotFound=0 #Setting flag to poll background process
+
+  #Polling background process
+  #Can use --output-limit flag of timer_tool
+  #But this is faster as it terminates as soon as size limit is reached
+  while [ "$wasNotFound" != 1 ] 
+  do
+	  ps | grep -q "$limit_proc_id"
+	  wasNotFound=$?
+	  fileSize=$(wc -c < "${TMP}/sub_output_${SID}_${TID}.txt")
+	  if [ "$fileSize" -ge 102400 ] ; then #checking if file size is more than 100 KB
+		  fileSizePanic=1
+		  kill $limit_proc_id
+		  break
+	  fi
+  done 
+
+  #If we panicked with file size checks we output message 
+  if [ "$fileSizePanic" = 1 ] ; then
+	VERDICT=$(error_code_to_string $RE ${TID})
+	echo "Output Text limit exceeded!" > ${TMP}/sub_run_${SID}_${TID}.log
+	LIMITFLAG=1
+  fi 
+
+  wait $limit_proc_id #This is blocking call and waits for the background process to end
+
     
-    #if the submission timed out
-    if [ "$?" = 124 ] ; then
-	    VERDICT=$(error_code_to_string $TLE ${TID})
-	    echo "Time limit exceeded" > ${TMP}/sub_run_${SID}_${TID}.log
-    	    LIMITFLAG=1
-    fi
+  # We get the exit status of the background process and check if the submission timed out
+  if [ "$?" = 124 ] ; then
+	
+	 # Remove the log file generated from runsolver
+    	 rm ${TMP}/submission_status_${SID}_${TID}.txt
 
-  fi
+	 VERDICT=$(error_code_to_string $TLE ${TID})
+	 echo "Time limit exceeded" > ${TMP}/sub_run_${SID}_${TID}.log
+    	 TimeLimit=1
+	 LIMITFLAG=1
   
+  # Else we check for MLE
+  else
+  	# Make all the flags as env vars for checking and remove this file
+    	 . ${TMP}/submission_status_${SID}_${TID}.txt
+    	 rm ${TMP}/submission_status_${SID}_${TID}.txt
+ 
+    	#Checking if it is MLE 
+    	if [ "$MEMOUT" = true ] ; then
+    		VERDICT=$(error_code_to_string $OOM ${TID})
+    		echo "Memory limit exceeded" > ${TMP}/sub_run_${SID}_${TID}.log
+    		LIMITFLAG=1	
+    	fi
+    
+  fi
+ 
+       
+    
   #If no limit was exceeded normal flow resumes
   if [ "$LIMITFLAG" = 0 ] ; then
-    clean_generated_output ${SID} ${TID}  # Delete the generated file to prevent any mismatch
-    ${SUB_FDR}/submission_${SID} < ${TEST_FDR}/inputfile_${TID}.txt > ${TMP}/sub_output_${SID}_${TID}.txt 2> ${TMP}/sub_run_${SID}_${TID}.log
-    
-    case "$?" in
+    case "$EXITSTATUS" in
       "0")
-          ./${PROB_FDR}/${PROB_CODE}/test_script ${TEST_FDR}/outputfile_${TID}.txt ${TMP}/sub_output_${SID}_${TID}.txt > /dev/null
-          VERDICT=$(error_code_to_string $? ${TID})
+          fileSize=$(wc -c < "${TMP}/sub_output_${SID}_${TID}.txt")
+          if [ "$fileSize" -le 1 ] ; then
+            echo -n " " >> ${TMP}/sub_output_${SID}_${TID}.txt
+          fi
+          if ! file --mime -b ${TMP}/sub_output_${SID}_${TID}.txt | grep -i -q "ascii" ; then  # checking for ASCII output file
+            echo "Output has invalid text" > ${TMP}/sub_run_${SID}_${TID}.log
+            VERDICT=$(error_code_to_string $RE ${TID})
+          else
+            ./${PROB_FDR}/${PROB_CODE}/test_script ${TEST_FDR}/outputfile_${TID}.txt ${TMP}/sub_output_${SID}_${TID}.txt > /dev/null
+            VERDICT=$(error_code_to_string $? ${TID})
+          fi
           ;;
       *)
-          echo "\nExit code: $?" >> ${TMP}/sub_run_${SID}_${TID}.log
+          echo "\nExit code: $EXITSTATUS" >> ${TMP}/sub_run_${SID}_${TID}.log
           VERDICT=$(error_code_to_string $RE ${TID})
           ;;
     esac
@@ -127,7 +174,11 @@ run_submission() {
   fi
 
 
-  VERDICT="${VERDICT} ${WCTIME} ${MAXVM} sub_run_${SID}_${TID}.log"
+  if [ "$TimeLimit" = 1 ] ; then
+	VERDICT="${VERDICT} 0 0 sub_run_${SID}_${TID}.log"
+  else
+  	VERDICT="${VERDICT} ${WCTIME} ${MAXVM} sub_run_${SID}_${TID}.log"
+  fi
   echo ${VERDICT}
 }
 

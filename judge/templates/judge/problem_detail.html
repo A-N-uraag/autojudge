@@ -78,7 +78,8 @@
     statementQuill.disable()
     inputFormatQuill.disable()
     outputFormatQuill.disable()
-
+</script>
+<script>
     $(document).ready(function () {
         $(".custom-file-input").on("change", function () {
             var fileName = $(this).val().split("\\").pop();
@@ -109,6 +110,13 @@
     });
 
 </script>
+{% if form.errors %}
+<script>
+    $(window).on('load', function () {
+        $('#modal-close-problem').modal('show');
+    });
+</script>
+{% endif %}
 {% endblock %}
 
 {% block content %}
@@ -123,15 +131,61 @@
             <a href="{% url 'judge:edit_problem' problem.pk %}" class="btn btn-primary">
                 <i class="fas fa-edit"></i>
             </a>
-            {% if curr_time < problem.contest.start_datetime %}
+            {% if curr_time < problem.contest.start_datetime or problem.is_closed %}
             <form class="d-inline" action="{% url 'judge:delete_problem' problem.pk %}" method="POST">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-danger"><i class="fas fa-trash"></i></button>
             </form>
             {% endif %}
+            {% if curr_time > problem.contest.start_datetime and curr_time < problem.contest.hard_end_datetime %}
+            <button type="button" class="btn btn-primary my-1 btn-sm" data-toggle="modal"
+                data-target="#modal-close-problem">Close Problem</button>
+            {% endif %}
         </div>
         {% endif %}
     </div>
+    {% if type == 'Poster' and curr_time > problem.contest.start_datetime and curr_time < problem.contest.hard_end_datetime %}
+    <div class="modal fade" id="modal-close-problem" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal- modal-dialog-centered modal-sm" role="document">
+            <div class="modal-content">
+                <div class="modal-body p-0">
+                    <div class="card bg-secondary shadow border-0">
+                        <div class="card-body px-lg-5 py-lg-5">
+                            <div class="text-center text-muted mb-4">Close Submissions</div>
+                            <form method="POST" role="form">
+                                {% if form.non_field_errors %}
+                                {% for nfe in form.non_field_errors %}
+                                <div class="alert alert-danger mt-2" role="alert">
+                                        {{ nfe }}
+                                </div>
+                                {% endfor %}
+                                {% endif %}
+                                {% csrf_token %}
+                                {% for field in form %}
+                                <div class="form-group mb-1">
+                                    {{ field.label_tag }}
+                                    {{ field }}
+                                    {% if field.help_text %}
+                                    <small class="form-text text-muted">{{ field.help_text|safe }}</small>
+                                    {% endif %}
+                                    {% if field.errors %}
+                                    <div class="alert alert-danger mt-2" role="alert">
+                                        {{ field.errors|striptags }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                {% endfor %}
+                                <div class="text-center">
+                                    <button type="submit" class="btn btn-primary my-4">Update</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
     <div class="col-12 my-4">
         <h4 class="">Statement</h4>
         <div id="statementEditor"></div>
@@ -162,6 +216,10 @@
                 <tr>
                     <th>Memory limit</th>
                     <td>{{ problem.memory_limit }} KB</td>
+                </tr>
+                <tr>
+                    <th>Submission limit</th>
+                    <td>{{ problem.submission_limit }}</td>
                 </tr>
                 <tr>
                     <th>Allowed file extensions</th>
@@ -252,7 +310,8 @@
                 <h3>Submit Solution</h3>
             </div>
             {% if curr_time < problem.contest.hard_end_datetime %}
-            {% if user_submission_num <= problem.contest.submission_limit %}
+            {% if not problem.is_closed %}
+            {% if user_submission_num <= problem.submission_limit %}
             <div class="card-body">
                 <form method="POST" enctype="multipart/form-data">
                     {% if form.non_field_errors %}
@@ -304,7 +363,12 @@
             {% endif %}
             {% else %}
             <div class="card-body">
-            <H2>Submissions Over!</H2>
+                <H2>Submissions Closed!</H2>
+            </div>
+            {% endif %}
+            {% else %}
+            <div class="card-body">
+                <H2>Submissions Over!</H2>
             </div>
             {% endif %}
         </div>

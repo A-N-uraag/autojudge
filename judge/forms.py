@@ -96,15 +96,13 @@ class NewContestForm(forms.Form):
                                  help_text='Enter a penalty factor between 0 and 1.')
     """Contest Penalty factor"""
 
-    submission_limit = forms.IntegerField(label='Submission Limit', min_value=1,
-                                 max_value=1000,
-                                 widget=forms.NumberInput(attrs={'class': 'form-control'}),
-                                 help_text='Enter the maximum number of submissions allowed \
-                                            for each participant (between 1 and 1000).')
-    """Contest Submission Limit"""
-
     is_public = forms.BooleanField(label='Is this contest public?', required=False)
     """Contest is_public property"""
+
+    enable_evaluation = forms.BooleanField(label='Enable evaluations for submissions',
+                                             required=False,
+                                             initial=True)
+    """Contest enable_evaluation property"""
 
     enable_leaderboard = forms.BooleanField(label='Enable leaderboard', required=False,
                                              initial=True)
@@ -244,16 +242,23 @@ class NewProblemForm(forms.Form):
 
     time_limit = forms.DurationField(label='Time Limit (in milliseconds)',
                                      widget=forms.NumberInput(attrs={'class': 'form-control'}),
-                                     initial=0, help_text='Specify a time limit in milliseconds \
+                                     initial=1000, help_text='Specify a time limit in milliseconds \
                                                            for the execution of the program.')
     """Problem Time limit"""
 
     memory_limit = forms.IntegerField(label='Memory Limit (in KB)',
                                       widget=forms.NumberInput(attrs={'class': 'form-control'}),
-                                      initial=0, min_value=0,
+                                      initial=10240, min_value=0,
                                       help_text='Specify a memory limit in MB for the execution \
                                                  of the program.If not specified(set to 0) memory limit will default to 1 KB')
     """Problem Memory limit"""
+
+    submission_limit = forms.IntegerField(label='Submission Limit', min_value=1,
+                                 max_value=1000, required=False, initial=1000,
+                                 widget=forms.NumberInput(attrs={'class': 'form-control'}),
+                                 help_text='Enter the maximum number of submissions allowed \
+                                            for each participant (between 1 and 1000).')
+    """Contest Submission Limit"""
 
     file_exts = forms.CharField(label='Permitted File extensions for submissions',
                                 widget=forms.TextInput(attrs={'class': 'form-control'}),
@@ -340,6 +345,14 @@ class EditProblemForm(forms.Form):
                                                the problem. If this is unknown, leave it as 0.')
     """Problem Difficulty Field"""
 
+class CloseProblemForm(forms.Form):
+    """
+    Form for closing submissions for a problem.
+    """
+    is_closed = forms.BooleanField(label='Close submissions', required=False,
+                                   help_text='Specify whether submissions for the problem \
+                                              should be closed.')
+    """Problem is_closed property"""
 
 class NewSubmissionForm(forms.Form):
     """
