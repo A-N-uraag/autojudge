@@ -485,6 +485,7 @@ def problem_detail(request, problem_id):
                 return handler404(request)
             context['form'] = form
         context['user_submission_num'] = user_submission_num
+        context['user_submissions_left'] = problem.submission_limit - user_submission_num + 1
     if perm is True:
         if timezone.now() < problem.contest.start_datetime:
             if request.method == 'POST':
