@@ -258,7 +258,7 @@ class NewProblemForm(forms.Form):
                                  widget=forms.NumberInput(attrs={'class': 'form-control'}),
                                  help_text='Enter the maximum number of submissions allowed \
                                             for each participant (between 1 and 1000).')
-    """Contest Submission Limit"""
+    """Problem Submission Limit"""
 
     file_exts = forms.CharField(label='Permitted File extensions for submissions',
                                 widget=forms.TextInput(attrs={'class': 'form-control'}),

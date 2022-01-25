@@ -135,6 +135,7 @@ def saver(sub_id):
                 st.memory_taken = int(memory[0])
                 st.time_taken = timedelta(seconds=float(time[0]))
                 st.message = msg[0]
+                st.msgfull = msg[0]
             else:
                 st.verdict = verdict[i]
                 st.memory_taken = int(memory[i])
