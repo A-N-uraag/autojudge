@@ -757,7 +757,7 @@ def submission_download(request, submission_id: str):
     else:
         return handler404(request)
 
-def all_submissions_download(request, problem_id: str, get_failed: bool):
+def all_submissions_download(request, problem_id: str):
     """
     Function to provide the facility to download all latest submissions for a given problem.
 
@@ -769,8 +769,6 @@ def all_submissions_download(request, problem_id: str, get_failed: bool):
     user = _get_user(request)
     all_participants = Submission.objects.filter(problem=problem_id).values_list('participant').distinct()
     zip_subdir = problem_id
-    if get_failed:
-        zip_subdir += "-failed"
     dir_dict = {'CE0': os.path.join(zip_subdir, 'compilation_errs'),
                 'CE1': os.path.join(zip_subdir, 'unknown_format'),
                 'CE2': os.path.join(zip_subdir, 'checks_failed'),
@@ -790,11 +788,9 @@ def all_submissions_download(request, problem_id: str, get_failed: bool):
         if user is None:
             return handler404(request)
         if perm or user.email == submission.participant:
-            if ((get_failed and submission.clang_tool_msg) or
-                not (get_failed or submission.clang_tool_msg)):
-                filedir, filename = os.path.split(filepath)
-                zip_path = os.path.join(dir_dict[submission.verdict_type], filename)
-                zf.write(filepath, zip_path)
+            filedir, filename = os.path.split(filepath)
+            zip_path = os.path.join(dir_dict[submission.verdict_type], filename)
+            zf.write(filepath, zip_path)
         else:
             return handler404(request)
     zf.close()

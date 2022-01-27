@@ -13,17 +13,10 @@
 
 {% if not participant %}
 <div style="text-align: right; padding-bottom: 5px;">
-    <a style="background-color: #5e72e4; margin: 0 0;" href="{% url 'judge:all_submissions_download' problem.code 0 %}" class="btn btn-icon btn-default">
+    <a style="background-color: #5e72e4; margin: 0 0;" href="{% url 'judge:all_submissions_download' problem.code %}" class="btn btn-icon btn-default">
         Download All Latest Submissions
     </a>
 </div>
-{% if problem.contest.enable_evaluation %}
-<div style="text-align: right;">
-    <a style="margin: 0 0;" href="{% url 'judge:all_submissions_download' problem.code 1 %}" class="btn btn-icon btn-default">
-        Download Failed Check Submissions
-    </a>
-</div>
-{% endif %}
 {% endif %}
 
 {% for email, subs in submissions.items %}
