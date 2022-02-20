@@ -39,6 +39,10 @@ TMP="tmp"
 PROB_CODE=$1
 shift
 
+# Pass command line arguments
+IS_CMDLINE=$1
+shift
+
 # Submission ID
 SUB_ID=$1
 shift
@@ -100,12 +104,14 @@ run_submission() {
   do
 	  ps | grep -q "$limit_proc_id"
 	  wasNotFound=$?
-	  fileSize=$(wc -c < "${TMP}/sub_output_${SID}_${TID}.txt")
-	  if [ "$fileSize" -ge 102400 ] ; then #checking if file size is more than 100 KB
-		  fileSizePanic=1
-		  kill $limit_proc_id
-		  break
-	  fi
+    if [ -f ${TMP}/sub_output_${SID}_${TID}.txt ]; then
+	    fileSize=$(wc -c < "${TMP}/sub_output_${SID}_${TID}.txt")
+	    if [ "$fileSize" -ge 102400 ] ; then #checking if file size is more than 100 KB
+  		  fileSizePanic=1
+	  	  kill $limit_proc_id
+		    break
+	    fi
+    fi
   done 
 
   #If we panicked with file size checks we output message 

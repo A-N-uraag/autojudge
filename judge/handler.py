@@ -535,6 +535,7 @@ def process_submission(problem_id: str, participant_id: str, file_type: str,
             os.makedirs(os.path.join('content', 'tmp'))
         # NB: File structure here
         # PROBLEM_ID
+        # IS_CMDLINE
         # SUBMISSION_ID
         # FILE_FORMAT
         # TIME_LIMIT
@@ -544,6 +545,7 @@ def process_submission(problem_id: str, participant_id: str, file_type: str,
         # ....
         with open(os.path.join('content', 'tmp', 'sub_run_' + str(sub.pk) + '.txt'), 'w') as f:
             f.write('{}\n'.format(problem.pk))
+            f.write('1\n') if problem.is_cmdline else f.write('0\n')
             f.write('{}\n'.format(sub.pk))
             f.write('{}\n'.format(file_type))
             f.write('{}\n'.format(problem.clang_checks))
