@@ -127,7 +127,7 @@ def delete_contest(contest_id: int) -> STATUS_AND_OPT_ERROR_T:
 
 
 def process_problem(contest_id: int,
-                    **kwargs: Union[str, int,
+                    **kwargs: Union[str, int, bool,
                                     Optional[InMemoryUploadedFile]]) -> STATUS_AND_OPT_ERROR_T:
     """
     Function to process a new :class:`~judge.models.Problem`.
@@ -159,7 +159,12 @@ def process_problem(contest_id: int,
     :type statement: str
     :param clang_checks: Placeholder clang checks
     :type statement: str
+    :param is_cmdline: Field to indicate if inputs are to be passed as command line
+                       arguments for this problem
+    :type statement: bool
     :param starting_code: Starting code for the problem
+    :type statement: Optional[InMemoryUploadedFile]
+    :param input_files: Input files for the problem
     :type statement: Optional[InMemoryUploadedFile]
     :param max_score: Maximum judge score per test case for the problem
     :type statement: int

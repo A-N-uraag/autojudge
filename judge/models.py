@@ -10,6 +10,8 @@ from django.utils import timezone
 def starting_code_name(instance, filename):
     return 'content/problems/{}/start_code{}'.format(instance.code, splitext(filename)[1])
 
+def input_files_name(instance, filename):
+    return 'content/problems/{}/input_files{}'.format(instance.code, splitext(filename)[1])
 
 def compilation_test_upload_location(instance, filename, is_compilation):
     # We disregard the filename argument
@@ -138,8 +140,14 @@ class Problem(models.Model):
     clang_checks = models.CharField(max_length=300, default='--all')
     """Flags for clang checks"""
 
+    is_cmdline = models.BooleanField(default=False)
+    """Enable inputs as command line arguments"""
+
     starting_code = models.FileField(upload_to=starting_code_name, null=True)
     """Problem starting code"""
+
+    input_files = models.FileField(upload_to=input_files_name, null=True)
+    """Problem input files"""
 
     max_score = models.PositiveSmallIntegerField(default=0)
     """Maximum score for a test case for the problem"""

@@ -307,7 +307,7 @@
     <div class="col-12 my-4">
         <div class="card">
             <div class="card-header">
-                <h3>Submit Solution</h3>
+                <h3>Submit Solution for {{ problem.name }}</h3>
                 <h3 style="color:red;">Submissions left: {{ user_submissions_left }}</h3>
             </div>
             {% if curr_time < problem.contest.hard_end_datetime %}
