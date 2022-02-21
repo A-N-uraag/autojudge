@@ -18,6 +18,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     llvm-10-dev \
     curl \
     wget \
+    unzip \
     git \
     file \
     ca-certificates \
