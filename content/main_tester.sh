@@ -264,6 +264,9 @@ run_submission() {
 
 clean_generated_output() {
   rm ${TMP}/sub_output_${1}_${2}.txt
+  if [ -d inputs ]; then
+	rm -r inputs
+  fi
 }
 
 
@@ -305,9 +308,23 @@ error_code_to_string() {
 # Add executable permission
 chmod +x ${PROB_FDR}/${PROB_CODE}/test_script
 
+# Check for input files
+HAS_INPUT_FILES=0
+if [ -f ${PROB_FDR}/${PROB_CODE}/input_files.zip ]; then
+	if file --mime -b ${PROB_FDR}/${PROB_CODE}/input_files.zip | grep -i -q "application/zip" ; then
+		HAS_INPUT_FILES=1
+	fi
+fi
+
 # Iterate over all testcase IDs passed as command line arguments
 for TESTCASE_ID in "$@";
   do
+	# Extract input_files.zip to ./inputs/
+	if [ "$HAS_INPUT_FILES" = 1 ]; then
+		mkdir inputs
+		unzip ${PROB_FDR}/${PROB_CODE}/input_files.zip -d inputs
+	fi
+
     # Run the submission using run_submission
     run_submission ${SUB_ID} ${TESTCASE_ID} ${TIMELIMIT} ${MEMLIMIT} >> ${TMP}/sub_run_${SUB_ID}.txt
 
