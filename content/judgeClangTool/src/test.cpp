@@ -115,10 +115,15 @@ public:
 	std::string TypeS;
         llvm::raw_string_ostream s(TypeS);
         cl->getArg(0)->printPretty(s, 0, Policy);
+ 	
+	std::string test=s.str();
+	test.erase(remove( test.begin(), test.end(), '\"' ),test.end());
+	
+	std::experimental::filesystem::path p(test);
 
- 	std::experimental::filesystem::path p(s.str());
+	//std::cout<<p.parent_path().string()<<"\n";
 
-    	if (p.parent_path()!="input"){
+    	if (p.parent_path()!="inputs"){
           printMsg(cl,"wrong fopen",FileFailType);		
     	}
 	
