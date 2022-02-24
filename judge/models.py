@@ -75,9 +75,6 @@ class Contest(models.Model):
     public = models.BooleanField(default=False)
     """Is the contest public?"""
 
-    enable_evaluation = models.BooleanField(default=True)
-    """Enable submission evaluation"""
-
     enable_leaderboard = models.BooleanField(default=True)
     """Enable leaderboard"""
 
@@ -136,6 +133,9 @@ class Problem(models.Model):
     # Support upto 30 file formats
     file_exts = models.CharField(max_length=100, default='.py,.cpp')
     """Accepted file extensions for submissions to problem"""
+
+    enable_evaluation = models.BooleanField(default=True)
+    """Enable submission evaluation"""
 
     clang_checks = models.CharField(max_length=300, default='--all')
     """Flags for clang checks"""
