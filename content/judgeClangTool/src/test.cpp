@@ -127,7 +127,31 @@ public:
           printMsg(cl,"wrong fopen",FileFailType);		
     	}
 	
-    } 
+    }
+    if(FuncDecl && FuncDecl->getNameInfo().getAsString() == "freopen") {
+    	
+	clang::LangOptions LangOpts;
+    	LangOpts.CPlusPlus = true;
+    	clang::PrintingPolicy Policy(LangOpts);
+
+	    
+	     		
+	std::string TypeS;
+        llvm::raw_string_ostream s(TypeS);
+        cl->getArg(0)->printPretty(s, 0, Policy);
+ 	
+	std::string test=s.str();
+	test.erase(remove( test.begin(), test.end(), '\"' ),test.end());
+	
+	std::experimental::filesystem::path p(test);
+
+	//std::cout<<p.parent_path().string()<<"\n";
+
+    	if (p.parent_path()!="inputs"){
+          printMsg(cl,"wrong freopen",FileFailType);		
+    	}
+	
+    }  
     if(SystemAllChecks){
      for (int i = 0; i < sysFunlength; i++) {
         if (FuncDecl && FuncDecl->getNameInfo().getAsString() == sysFuncs[i]) {
