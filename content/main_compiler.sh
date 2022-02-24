@@ -39,7 +39,7 @@ case "$SUBPATH" in
         EXTENSION=".c"
         compile_c $SUBPATH $EXECPATH
         if [ -e $EXECPATH ] ; then
-	chmod 555 $EXECPATH
+	chmod 550 $EXECPATH
 	else #This denotes execpath does not exist hence compilation failed!
 		$(exit 1) 	
         fi
@@ -51,7 +51,7 @@ case "$SUBPATH" in
         EXTENSION=".cpp"
         compile_cpp $SUBPATH $EXECPATH
         if [ -e $EXECPATH ] ; then
-	chmod 555 $EXECPATH
+	chmod 550 $EXECPATH
 	else #This denotes execpath does not exist hence compilation failed!
 		$(exit 1) 	
         fi
@@ -61,7 +61,7 @@ case "$SUBPATH" in
         EXTENSION=".py"
         compile_py $SUBPATH $EXECPATH
         if [ -e $EXECPATH ] ; then
-	chmod 555 $EXECPATH
+	chmod 550 $EXECPATH
 	else #This denotes execpath does not exist hence compilation failed!
 		$(exit 1) 	
         fi
@@ -71,7 +71,7 @@ case "$SUBPATH" in
         EXTENSION=".go"
         compile_go $SUBPATH $EXECPATH
         if [ -e $EXECPATH ] ; then
-	chmod 555 $EXECPATH
+	chmod 550 $EXECPATH
 	else #This denotes execpath does not exist hence compilation failed!
 		$(exit 1) 	
         fi
@@ -81,7 +81,7 @@ case "$SUBPATH" in
         EXTENSION=".hs"
         compile_hs $SUBPATH $EXECPATH
         if [ -e $EXECPATH ] ; then
-	chmod 555 $EXECPATH
+	chmod 550 $EXECPATH
 	else #This denotes execpath does not exist hence compilation failed!
 		$(exit 1) 	
         fi

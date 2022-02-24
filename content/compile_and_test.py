@@ -93,4 +93,3 @@ if clangjudge_flag == 0:
                 stat_file.write("{}\n".format(testcase_id))
     else:
         subprocess.call(['./main_tester.sh'] + sub_info[0:3] + sub_info[5:])  # run tests
-        subprocess.call(['rm', 'submissions/submission_{}'.format(sub_info[2])])  # remove executable

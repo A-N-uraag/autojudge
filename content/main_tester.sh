@@ -33,6 +33,7 @@ NA=5
 PROB_FDR="problems"
 SUB_FDR="submissions"
 TEST_FDR="testcase"
+INPUT_FDR="inputs"
 TMP="tmp"
 
 # Problem code
@@ -63,6 +64,7 @@ run_submission() {
   TID=$2
   TLIMIT=$3
   MLIMIT=$4
+  CMDARGS=$5
   
   #A flag to denote any limit was exceeded
   LIMITFLAG=0
@@ -80,7 +82,7 @@ run_submission() {
   #       This is then checked normally using a diff
   #       The status is appended to the verdict_string along with the memory and time consumed
 
-  if [ "$IS_CMDLINE" = 0 ] ; then
+  if [ "$CMDARGS" = 0 ] ; then
   
 		# Wrapping timer_tool(runsolver) with timeout tool as timeout tool support seconds below 0(0.001s) 
 		# For runsolver first two lines specify the flags required
@@ -91,8 +93,7 @@ run_submission() {
 		# The last line runs the process
 		timeout -s 15 $TLIMIT timer_tool -w /dev/null --vsize-limit $MLIMIT --cores 0 \
 						--var ${TMP}/submission_status_${SID}_${TID}.txt \
-						${SUB_FDR}/submission_${SID} < ${TEST_FDR}/inputfile_${TID}.txt > ${TMP}/sub_output_${SID}_${TID}.txt 2> ${TMP}/sub_run_${SID}_${TID}.log & #Run this in background
-		
+						${INPUT_FDR}/submission_${SID} < ${TEST_FDR}/inputfile_${TID}.txt > ${TMP}/sub_output_${SID}_${TID}.txt 2> ${TMP}/sub_run_${SID}_${TID}.log & #Run this in background
 		limit_proc_id=$! #Getting PID of background process
 		
 		wasNotFound=0 #Setting flag to poll background process
@@ -158,7 +159,7 @@ run_submission() {
 
 			timeout -s 15 $TLIMIT timer_tool -w /dev/null --vsize-limit $MLIMIT --cores 0 \
 						--var ${TMP}/submission_status_${SID}_${TID}.txt \
-						${SUB_FDR}/submission_${SID} $(sed "${n}q;d" ${TEST_FDR}/inputfile_${TID}.txt) >> ${TMP}/sub_output_${SID}_${TID}.txt 2>> ${TMP}/sub_run_${SID}_${TID}.log & #Run this in background
+						${INPUT_FDR}/submission_${SID} $(sed "${n}q;d" ${TEST_FDR}/inputfile_${TID}.txt) >> ${TMP}/sub_output_${SID}_${TID}.txt 2>> ${TMP}/sub_run_${SID}_${TID}.log & #Run this in background
 
 
 			limit_proc_id=$! #Getting PID of background process
@@ -188,11 +189,17 @@ run_submission() {
 			    VERDICT=$(error_code_to_string $RE ${TID})
 			    echo "Output Text limit exceeded!" > ${TMP}/sub_run_${SID}_${TID}.log
 			    LIMITFLAG=1
-			    break
+			    # break
 			fi
 
 
 			wait $limit_proc_id #This is blocking call and waits for the background process to end
+
+			if [ "$fileSizePanic" = 1 ] ; then
+				# Remove the log file generated from runsolver
+				rm ${TMP}/submission_status_${SID}_${TID}.txt
+				break
+			fi
 
 			# We get the exit status of the background process and check if the submission timed out
 			if [ "$?" = 124 ] ; then
@@ -264,9 +271,9 @@ run_submission() {
 
 clean_generated_output() {
   rm ${TMP}/sub_output_${1}_${2}.txt
-  if [ -d inputs ]; then
-	rm -r inputs
-  fi
+  mv ${INPUT_FDR}/submission_${SUB_ID} .
+  rm -rf ${INPUT_FDR}/*
+  mv submission_${SUB_ID} ${INPUT_FDR}
 }
 
 
@@ -306,7 +313,10 @@ error_code_to_string() {
 }
 
 # Add executable permission
-chmod +x ${PROB_FDR}/${PROB_CODE}/test_script
+chmod ug+x ${PROB_FDR}/${PROB_CODE}/test_script
+
+mkdir ${INPUT_FDR}
+mv ${SUB_FDR}/submission_${SUB_ID} ${INPUT_FDR}
 
 # Check for input files
 HAS_INPUT_FILES=0
@@ -321,13 +331,14 @@ for TESTCASE_ID in "$@";
   do
 	# Extract input_files.zip to ./inputs/
 	if [ "$HAS_INPUT_FILES" = 1 ]; then
-		mkdir inputs
-		unzip ${PROB_FDR}/${PROB_CODE}/input_files.zip -d inputs
+		unzip ${PROB_FDR}/${PROB_CODE}/input_files.zip -d ${INPUT_FDR}
 	fi
 
     # Run the submission using run_submission
-    run_submission ${SUB_ID} ${TESTCASE_ID} ${TIMELIMIT} ${MEMLIMIT} >> ${TMP}/sub_run_${SUB_ID}.txt
+    run_submission ${SUB_ID} ${TESTCASE_ID} ${TIMELIMIT} ${MEMLIMIT} ${IS_CMDLINE} >> ${TMP}/sub_run_${SUB_ID}.txt
 
     # Remove the generated output files
     clean_generated_output ${SUB_ID} ${TESTCASE_ID}
   done
+
+rm -rf ${INPUT_FDR}
