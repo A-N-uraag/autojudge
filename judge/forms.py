@@ -99,11 +99,6 @@ class NewContestForm(forms.Form):
     is_public = forms.BooleanField(label='Is this contest public?', required=False)
     """Contest is_public property"""
 
-    enable_evaluation = forms.BooleanField(label='Enable evaluations for submissions',
-                                             required=False,
-                                             initial=True)
-    """Contest enable_evaluation property"""
-
     enable_leaderboard = forms.BooleanField(label='Enable leaderboard', required=False,
                                              initial=True)
     """Contest enable_leaderboard property"""
@@ -269,6 +264,11 @@ class NewProblemForm(forms.Form):
                                            for submissions.')
     """Problem File Extensions"""
 
+    enable_evaluation = forms.BooleanField(label='Enable evaluations for submissions',
+                                           required=False,
+                                           initial=True)
+    """Problem enable_evaluation property"""
+
     clang_checks_choices = [
         ('all', 'All checks'),
         ('string-all-check', 'All string checks'),
@@ -286,12 +286,23 @@ class NewProblemForm(forms.Form):
                                    help_text='Enable clang checks to run.')
     """Problem Clang Tool Flags"""
 
+    is_cmdline = forms.BooleanField(label='Enable command line arguments',
+                                    required=False, initial=False)
+    """Problem is_cmdline property"""
+
     starting_code = forms.FileField(label='Starting code',
                                     widget=forms.FileInput(attrs={'class': 'form-control-file'}),
                                     allow_empty_file=False, required=False,
                                     help_text='Upload some starting code to help participants \
                                                get started.')
     """Problem Starting code"""
+
+    input_files = forms.FileField(label='Input files',
+                                  widget=forms.FileInput(attrs={'class': 'form-control-file'}),
+                                  allow_empty_file=False, required=False,
+                                  help_text='Upload zip archive containing files that \
+                                             the submissions should read.')
+    """Problem input files"""
 
     max_score = forms.IntegerField(label='Maximum score',
                                    widget=forms.NumberInput(attrs={'class': 'form-control'}),

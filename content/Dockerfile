@@ -18,8 +18,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     llvm-10-dev \
     curl \
     wget \
+    unzip \
     git \
     file \
+    acl \
     ca-certificates \
     software-properties-common && \
     rm -rf /var/lib/apt/lists/*

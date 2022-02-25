@@ -68,7 +68,6 @@ class HandlerTests(TestCase):
                                              contest_hard_end='2019-04-27T12:30',
                                              penalty=0, is_public=True,
                                              enable_linter_score=True,
-                                             enable_evaluation=True,
                                              enable_leaderboard=True, enable_poster_score=True)
         self.assertTrue(status)
         c = models.Contest.objects.filter(pk=int(pk))
@@ -81,7 +80,6 @@ class HandlerTests(TestCase):
         self.assertEqual(c.hard_end_datetime, datetime(2019, 4, 27, 7, 0, tzinfo=timezone.utc))
         self.assertEqual(c.penalty, 0)
         self.assertTrue(c.public)
-        self.assertTrue(c.enable_evaluation)
         self.assertTrue(c.enable_leaderboard)
         status, err = handler.delete_contest(contest_id=int(pk))
         self.assertTrue(status)
@@ -100,7 +98,9 @@ class HandlerTests(TestCase):
             input_format='Test input format',
             output_format='Test output format', difficulty=5,
             time_limit=timedelta(seconds=10), memory_limit=10000,
-            submission_limit=1000, file_exts='.py', starting_code=None,
+            submission_limit=1000, file_exts='.py',
+            enable_evaluation=False, is_cmdline=False,
+            starting_code=None, input_files=None,
             max_score=4, compilation_script=None, test_script=None)
         self.assertTrue(status)
         self.assertIsNone(msg)
@@ -117,6 +117,8 @@ class HandlerTests(TestCase):
         self.assertEqual(p.memory_limit, 10000)
         self.assertEqual(p.submission_limit, 1000)
         self.assertEqual(p.file_exts, '.py')
+        self.assertEqual(p.enable_evaluation, False)
+        self.assertEqual(p.is_cmdline, False)
         self.assertEqual(p.max_score, 4)
         status, msg = handler.update_problem(code=p.code, name='Updated Test Problem 1',
                                              statement='Updated Test Problem Statement',
@@ -159,8 +161,10 @@ class HandlerTests(TestCase):
                                       statement='Test Problem Statement',
                                       input_format='Test input format',
                                       output_format='Test output format', difficulty=5,
-                                      time_limit=timedelta(seconds=10),
-                                      memory_limit=10000, file_exts='.py', starting_code=None,
+                                      time_limit=timedelta(seconds=10), memory_limit=10000,
+                                      submission_limit=1000, file_exts='.py',
+                                      enable_evaluation=False, is_cmdline=False,
+                                      starting_code=None, input_files=None, 
                                       max_score=4, compilation_script=None, test_script=None)
         person1 = models.Person.objects.create(email='testing1@test.com', rank=0)
         models.Person.objects.create(email='testing2@test.com', rank=0)

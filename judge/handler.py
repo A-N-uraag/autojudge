@@ -47,7 +47,6 @@ def update_index_string(index_str: str, index_str_plural: str) -> Tuple[bool, Va
 def process_contest(contest_name: str, contest_start: datetime, contest_soft_end: datetime,
                     contest_hard_end: datetime, penalty: float,
                     is_public: bool,
-                    enable_evaluation: bool,
                     enable_leaderboard: bool,
                     enable_linter_score: bool,
                     enable_poster_score: bool) -> Tuple[bool, Union[ValidationError, str]]:
@@ -60,7 +59,6 @@ def process_contest(contest_name: str, contest_start: datetime, contest_soft_end
     :param contest_hard_end: A `datetime` object representing the hard deadline of the contest
     :param penalty: A penalty score for late submissions
     :param is_public: Field to indicate if the contest is public (or private)
-    :param enable_evaluation: Field to indicate if submissions should be evaluated
     :param enable_leaderboard: Field to indicate if leaderboard is to be maintained
     :param enable_linter_score: Field to indicate if linter scoring is enabled in the contest
     :param enable_poster_score: Field to indicate if poster scoring is enabled in the contest
@@ -79,7 +77,6 @@ def process_contest(contest_name: str, contest_start: datetime, contest_soft_end
                                                     hard_end_datetime=contest_hard_end,
                                                     penalty=penalty,
                                                     public=is_public,
-                                                    enable_evaluation=enable_evaluation,
                                                     enable_leaderboard=enable_leaderboard,
                                                     enable_linter_score=enable_linter_score,
                                                     enable_poster_score=enable_poster_score)
@@ -127,7 +124,7 @@ def delete_contest(contest_id: int) -> STATUS_AND_OPT_ERROR_T:
 
 
 def process_problem(contest_id: int,
-                    **kwargs: Union[str, int,
+                    **kwargs: Union[str, int, bool,
                                     Optional[InMemoryUploadedFile]]) -> STATUS_AND_OPT_ERROR_T:
     """
     Function to process a new :class:`~judge.models.Problem`.
@@ -157,9 +154,16 @@ def process_problem(contest_id: int,
                              for each participant
     :param file_exts: Accepted file format for submissions
     :type statement: str
+    :param enable_evaluation: Field to indicate if submissions should be evaluated
+    :type statement: bool
     :param clang_checks: Placeholder clang checks
     :type statement: str
+    :param is_cmdline: Field to indicate if inputs are to be passed as command line
+                       arguments for this problem
+    :type statement: bool
     :param starting_code: Starting code for the problem
+    :type statement: Optional[InMemoryUploadedFile]
+    :param input_files: Input files for the problem
     :type statement: Optional[InMemoryUploadedFile]
     :param max_score: Maximum judge score per test case for the problem
     :type statement: int
@@ -525,11 +529,12 @@ def process_submission(problem_id: str, participant_id: str, file_type: str,
 
     testcases = models.TestCase.objects.filter(problem=problem)
 
-    if problem.contest.enable_evaluation:
+    if problem.enable_evaluation:
         if not os.path.exists(os.path.join('content', 'tmp')):
             os.makedirs(os.path.join('content', 'tmp'))
         # NB: File structure here
         # PROBLEM_ID
+        # IS_CMDLINE
         # SUBMISSION_ID
         # FILE_FORMAT
         # TIME_LIMIT
@@ -539,6 +544,7 @@ def process_submission(problem_id: str, participant_id: str, file_type: str,
         # ....
         with open(os.path.join('content', 'tmp', 'sub_run_' + str(sub.pk) + '.txt'), 'w') as f:
             f.write('{}\n'.format(problem.pk))
+            f.write('1\n') if problem.is_cmdline else f.write('0\n')
             f.write('{}\n'.format(sub.pk))
             f.write('{}\n'.format(file_type))
             f.write('{}\n'.format(problem.clang_checks))
