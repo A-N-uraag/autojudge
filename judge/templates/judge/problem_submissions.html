@@ -43,7 +43,7 @@
                         {% if forloop.first %}
                         <span class="badge badge-pill badge-primary">Public</span>
                         {% endif %}
-                        {% if result == 'Internal Failure' or not problem.contest.enable_evaluation %}
+                        {% if result == 'Internal Failure' or not problem.enable_evaluation %}
                         <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABkAAAAZCAYAAADE6YVjAAAAk0lEQVRIie2T2w2AIAxFu4lshBvpBrBB2fT6ccOPmlCKGk08Sf9oT+hD5OfT5AysK5AzcGlhVSAEQOQYIQClDArn+bz4PvjOQYw2gVuk2ieowTwj0+STcHZmfBKGgZRGBADzGyzLmIT5b/gJuXkmIv7tYp6RR+5EpP/i+d6BVeQWVFRrr89n0N2iFinxDjrW9OelbNPkxjL/y6yXAAAAAElFTkSuQmCC"/>
                         {% elif result == 'Passed' %}
                         <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABkAAAAZCAYAAADE6YVjAAAAsklEQVRIie2VwQnDMAxFNZA9lskM8gzKWjp1FF+SBV4vNZSStrYTQgv58K962PqSRC79rRwnk5mYyGQc57DihiGrILcNr8LMPA4rFCJxu/iLI5FC6YcFQhPgGdQFMKwLUG1YB2jpB9QeNdV3fAzwcFPqFN0FUfQ7JJF2QRLpR15ySk9EZDxdS2O6RM6aE+mf+EDoXyuFQisoEMZ2V5VhvO3RMvBFn+Q4ipJIKHrsPbl0uu69ccamwMCGAQAAAABJRU5ErkJggg=="/>
@@ -60,7 +60,7 @@
                         {% endif %}
                         <span class="badge badge-pill badge-default">Private</span>
                         {% endif %}
-                        {% if result == 'Internal Failure' or not problem.contest.enable_evaluation %}
+                        {% if result == 'Internal Failure' or not problem.enable_evaluation %}
                         <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABkAAAAZCAYAAADE6YVjAAAAk0lEQVRIie2T2w2AIAxFu4lshBvpBrBB2fT6ccOPmlCKGk08Sf9oT+hD5OfT5AysK5AzcGlhVSAEQOQYIQClDArn+bz4PvjOQYw2gVuk2ieowTwj0+STcHZmfBKGgZRGBADzGyzLmIT5b/gJuXkmIv7tYp6RR+5EpP/i+d6BVeQWVFRrr89n0N2iFinxDjrW9OelbNPkxjL/y6yXAAAAAElFTkSuQmCC"/>
                         {% elif result == 'Passed' %}
                         <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABkAAAAZCAYAAADE6YVjAAAAsklEQVRIie2VwQnDMAxFNZA9lskM8gzKWjp1FF+SBV4vNZSStrYTQgv58K962PqSRC79rRwnk5mYyGQc57DihiGrILcNr8LMPA4rFCJxu/iLI5FC6YcFQhPgGdQFMKwLUG1YB2jpB9QeNdV3fAzwcFPqFN0FUfQ7JJF2QRLpR15ySk9EZDxdS2O6RM6aE+mf+EDoXyuFQisoEMZ2V5VhvO3RMvBFn+Q4ipJIKHrsPbl0uu69ccamwMCGAQAAAABJRU5ErkJggg=="/>
